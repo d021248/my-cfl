@@ -11,27 +11,20 @@ import java.util.stream.Collectors;
 
 class Command {
 
-	private static List<Command> runnig = new ArrayList<>();
+	private static List<Command> list = new ArrayList<>();
 
-	private Consumer<InputStream> in = null;
-	private Consumer<OutputStream> out = null;
-	private Consumer<InputStream> err = null;
-
-	private String cmd;
-	private Process process;
+	private Process process = null;
 	private Thread tin = null;
 	private Thread tout = null;
 	private Thread terr = null;
+	private final String[] cmd;
 
-	public Command(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
-		this.in = in;
-		this.out = out;
-		this.err = err;
-		this.process = null;
+	public Command(String... cmd) {
+		this.cmd = cmd;
 	}
 
 	public static void stopAll() {
-		runnig.stream().forEach(Command::stop);
+		list.stream().forEach(Command::stop);
 	}
 
 	public void stop() {
@@ -47,15 +40,23 @@ class Command {
 		}
 	}
 
-	public void start(String... command) throws IOException {
+	public void start() throws IOException {
+		start(null, null, null);
+	}
 
-		if (cmd != null) {
-			throw new IOException(String.format("Instance already in use: %s", this));
+	public void start(Consumer<OutputStream> out) throws IOException {
+		start(null, out, null);
+	}
+
+	public void start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
+			throws IOException {
+
+		if (process != null) {
+			throw new IOException(String.format("Command already started: %s", this));
 		}
 
-		runnig.add(this);
-		cmd = Arrays.asList(command).stream().collect(Collectors.joining(" "));
-		process = new ProcessBuilder().command(command).start();
+		list.add(this);
+		process = new ProcessBuilder().command(cmd).start();
 
 		if (in != null) {
 			tin = new Thread(() -> in.accept(process.getInputStream()));
@@ -75,6 +76,7 @@ class Command {
 
 	@Override
 	public String toString() {
-		return String.format("%s [ %s ]", this.getClass().getSimpleName(), (cmd == null) ? "<initial>" : cmd);
+		var command = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
+		return String.format("%s [ %s ]", this.getClass().getSimpleName(), command);
 	}
 }

@@ -11,23 +11,22 @@ public class TestCommand {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		System.out.println();
-		Command c = new Command(TestCommand::handlerIn, TestCommand::handlerOut, TestCommand::handlerErr);
-		c.start("cf", "env", "mkv-srv");
+		Command c = new Command("cf", "env", "mkv-srv");
+		c.start(TestCommand::handlerOut);
 		System.out.println();
 
 		System.out.println();
-		Command d = new Command(TestCommand::handlerIn, TestCommand::handlerOut, TestCommand::handlerErr);
-		d.start("cmd");
+		Command d = new Command("cmd");
+		d.start(TestCommand::handlerIn, TestCommand::handlerOut, TestCommand::handlerErr);
 		System.out.println();
 
 		System.out.println();
-		Command e = new Command(TestCommand::handlerIn, TestCommand::handlerOut, TestCommand::handlerErr);
-		e.start("notepad");
+		Command e = new Command("notepad");
+		e.start();
 		System.out.println();
 
 		Thread.sleep(10_000);
 		Command.stopAll();
-
 	}
 
 	private static void handlerOut(OutputStream os) {
