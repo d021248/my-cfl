@@ -3,6 +3,7 @@ package d021248.cfl.cmd;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
@@ -11,22 +12,27 @@ public class TestCommand {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		System.out.println();
-		Command c = new Command("cf", "env", "mkv-srv");
-		c.start(TestCommand::handlerOut);
+		Command c = new Command("cf", "env", "mkv-srv").in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+				.err(TestCommand::handlerErr);
+		c.start();
 		System.out.println();
 
 		System.out.println();
-		Command d = new Command("cmd");
-		d.start(TestCommand::handlerIn, TestCommand::handlerOut, TestCommand::handlerErr);
+		Command d = new Command("cmd").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+				.err(TestCommand::handlerErr);
+		d.start();
 		System.out.println();
 
 		System.out.println();
-		Command e = new Command("notepad");
+		Command e = new Command("notepad").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+				.err(TestCommand::handlerErr);
 		e.start();
 		System.out.println();
 
-		Thread.sleep(10_000);
+		Thread.sleep(15_000);
 		Command.stopAll();
+
+		// Thread.sleep(15_000);
 	}
 
 	private static void handlerOut(OutputStream os) {
