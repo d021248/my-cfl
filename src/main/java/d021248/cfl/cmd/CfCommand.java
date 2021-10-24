@@ -8,11 +8,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 class CfCommand extends Command {
 
+	private static Pattern targetPattern = Pattern.compile("^\\S+:\\s+(\\S+)$");
+
+	private static Pattern appsPattern = Pattern
+			.compile("^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$");
 	private final static String CF = System.getProperty("CFL", "cf");
-	private static Consumer<String> logger = System.out::println;
+	private static Consumer<String> outLogger = System.out::println;
+	private static Consumer<String> errLogger = System.err::println;
 
 	private CfCommand(String... cmd) {
 		super(cmd);
@@ -21,75 +27,98 @@ class CfCommand extends Command {
 	@Override
 	public int start() {
 		try {
+			CfCommand.errLogger.accept(this.toString());
 			return super.start();
 		} catch (IOException | InterruptedException e) {
-			logger.accept(String.format("Error: %s", e.getMessage()));
+			CfCommand.errLogger.accept(String.format("Error: %s", e.getMessage()));
 		}
 		return -1;
 	}
 
-	public static List<Application> apps() {
-		var command = new CfCommand("cf", "apps");
-		var appList = new ArrayList<Application>();
-		Consumer<InputStream> toApplicationList = is -> getApplicationList(is, appList);
+	public static Target target() {
 
-		command.sync().in(toApplicationList).err(CfCommand::toLogger);
+		var attrList = new ArrayList<String>();
+		Consumer<InputStream> getTarget = is -> {
+			String line;
+			int i = 0;
+			try (var br = new BufferedReader(new InputStreamReader(is))) {
+				while ((line = br.readLine()) != null) {
+
+					var matcher = targetPattern.matcher(line);
+					if (matcher.matches()) {
+						attrList.add(matcher.group(1));
+					}
+				}
+			} catch (IOException e) {
+				CfCommand.errLogger.accept(String.format("Error: %s", e.getMessage()));
+			}
+		};
+
+		var command = new CfCommand("cf", "target");
+		command.sync().in(getTarget).err(CfCommand::toErrLogger);
+		command.start();
+		return new Target(attrList.get(0), attrList.get(2), attrList.get(2), attrList.get(3), attrList.get(4));
+	}
+
+	public static List<App> apps() {
+
+		var appList = new ArrayList<App>();
+		Consumer<InputStream> getAppList = is -> {
+			String line;
+			try (var br = new BufferedReader(new InputStreamReader(is))) {
+				while ((line = br.readLine()) != null) {
+					var matcher = appsPattern.matcher(line);
+					if (matcher.matches()) {
+						var app = new App(matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(4),
+								matcher.group(5), matcher.group(6));
+						appList.add(app);
+					}
+				}
+			} catch (IOException e) {
+				CfCommand.errLogger.accept(String.format("Error: %s", e.getMessage()));
+			}
+			Collections.sort(appList, (l, r) -> l.name.compareTo(r.name));
+		};
+
+		var command = new CfCommand("cf", "apps");
+		command.sync().in(getAppList).err(CfCommand::toErrLogger);
 		command.start();
 		return appList;
-	}
-
-	private static List<Application> getApplicationList(InputStream is, ArrayList<Application> appList) {
-		final String APPS_FOUND_INDICATOR = "^name.*requested.*state.*instances.*memory.*disk.*urls.*";
-		String line;
-		var isApp = false;
-		try (var br = new BufferedReader(new InputStreamReader(is))) {
-			while ((line = br.readLine()) != null) {
-				CfCommand.logger.accept(line);
-				if (isApp) {
-					var app = new Application();
-					var a = line.split("\\s+");
-					app.setName(saveGet(a, 0));
-					app.setState(saveGet(a, 1));
-					app.setInstances(saveGet(a, 2));
-					app.setMemory(saveGet(a, 3));
-					app.setDisk(saveGet(a, 4));
-					app.setUrls(saveGet(a, 5));
-					appList.add(app);
-				}
-				if (line.matches(APPS_FOUND_INDICATOR)) {
-					isApp = true;
-				}
-			}
-		} catch (IOException e) {
-
-			CfCommand.logger.accept("Error: " + e.getMessage());
-		}
-		Collections.sort(appList, (l, r) -> l.getName().compareTo(r.getName()));
-		return appList;
-	}
-
-	private static String saveGet(String[] a, int i) {
-		return (a == null || i >= a.length || i < 0) ? "" : a[i];
 	}
 
 	public static CfCommand logs(String app) {
 		var command = new CfCommand("cf", "logs", app);
-		command.async().in(CfCommand::toLogger).err(CfCommand::toLogger);
+		command.async().in(CfCommand::toOutLogger).err(CfCommand::toErrLogger);
 		command.start();
 		return command;
 	}
 
-	private static void toLogger(InputStream is) {
+	public static CfCommand env(String app) {
+		var command = new CfCommand("cf", "env", app);
+		command.async().in(CfCommand::toOutLogger).err(CfCommand::toErrLogger);
+		command.start();
+		return command;
+	}
+
+	private static void toOutLogger(InputStream is) {
+		toLogger(is, CfCommand.outLogger);
+	}
+
+	private static void toErrLogger(InputStream is) {
+		toLogger(is, CfCommand.errLogger);
+	}
+
+	private static void toLogger(InputStream is, Consumer<String> logger) {
 
 		String line;
 		try (var br = new BufferedReader(new InputStreamReader(is))) {
 			while ((line = br.readLine()) != null) {
 				if (!line.isEmpty()) {
-					logger.accept(line.trim());
+					logger.accept("-------" + line.trim());
 				}
 			}
 		} catch (IOException e) {
-			logger.accept(String.format("Error: %s", e.getMessage()));
+			CfCommand.errLogger.accept(String.format("Error: %s", e.getMessage()));
 		}
 	}
 }
