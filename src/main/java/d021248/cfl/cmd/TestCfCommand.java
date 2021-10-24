@@ -11,9 +11,14 @@ public class TestCfCommand {
         // System.out.println(list);
 
         // CfCommand.env("mkv-srv");
-        var target = CfCommand.target();
+
+        Cf.logs();
+        Thread.sleep(20_000);
+        Command.stopAll();
+
+        var target = Cf.target();
         System.out.println(target.endpoint);
-        // Thread.sleep(60_000);
-        // Command.stopAll();
+
+        Command.stopAll();
     }
 }

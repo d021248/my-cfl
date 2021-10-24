@@ -25,8 +25,12 @@ class Command {
 	private Consumer<InputStream> err = null;
 	private boolean async = false;
 
-	public Command(String... cmd) {
+	private Command(String... cmd) {
 		this.cmd = cmd;
+	}
+
+	public static Command cli(String... cmd) {
+		return new Command(cmd);
 	}
 
 	public Command in(Consumer<InputStream> in) {
@@ -84,21 +88,20 @@ class Command {
 		activeList.remove(this);
 	}
 
-	public int start() throws IOException, InterruptedException {
+	public int start() {
 		if (async) {
-			new Thread(() -> startAsync(in, out, err)).start();
+			new Thread(() -> startRelaxed(in, out, err)).start();
 			return 0;
 		}
-		return start(in, out, err);
+		return startRelaxed(in, out, err);
 	}
 
-	protected int startAsync(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
+	protected int startRelaxed(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
 		try {
 			return start(in, out, err);
-		} catch (IOException | InterruptedException ex) {
-			// ignore
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
 		}
-		return 0;
 	}
 
 	protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
@@ -137,6 +140,6 @@ class Command {
 
 	@Override
 	public String toString() {
-		return String.format("%s [ %s ]", this.getClass().getSimpleName(), get());
+		return String.format("%s(\"%s\")", this.getClass().getSimpleName(), get());
 	}
 }
