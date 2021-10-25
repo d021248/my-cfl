@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,6 +25,10 @@ class Cf {
 
 	private Cf() {
 
+	}
+
+	public static Command cmd(String... cmd) {
+		return Command.cmd(cmd).in(Cf::toOutLogger).err(Cf::toErrLogger);
 	}
 
 	public static Target target() {
@@ -105,7 +110,7 @@ class Cf {
 			if (result == null || result.equals("\n}")) {
 				result = "{}";
 			}
-			
+
 			env[0] = result;
 		};
 		// @formatter:ff
@@ -127,7 +132,7 @@ class Cf {
 		try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
 			bufferedReader
 				.lines()
-				.filter(String::isEmpty)
+				.filter(Predicate.not(String::isEmpty))
 				.map(String::trim)
 				.forEach(logger::accept);
 		} catch (IOException e) {
