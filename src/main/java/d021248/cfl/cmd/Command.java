@@ -29,7 +29,7 @@ class Command {
 		this.cmd = cmd;
 	}
 
-	public static Command cli(String... cmd) {
+	public static Command cmd(String... cmd) {
 		return new Command(cmd);
 	}
 
@@ -134,12 +134,12 @@ class Command {
 		return result;
 	}
 
-	public String get() {
+	public String cmd() {
 		return Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%s(\"%s\")", this.getClass().getSimpleName(), get());
+		return String.format("%s(\"%s\")", this.getClass().getSimpleName(), cmd());
 	}
 }

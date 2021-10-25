@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 class Cf {
 
@@ -41,7 +42,7 @@ class Cf {
 			}
 		};
 
-		Command.cli("cf", "target").in(getTarget).err(Cf::toErrLogger).start();
+		Command.cmd("cf", "target").in(getTarget).err(Cf::toErrLogger).start();
 		return new Target(attrList.get(0), attrList.get(2), attrList.get(2), attrList.get(3), attrList.get(4));
 	}
 
@@ -65,7 +66,7 @@ class Cf {
 			Collections.sort(appList, (l, r) -> l.name.compareTo(r.name));
 		};
 
-		Command.cli("cf", "apps").in(getAppList).err(Cf::toErrLogger).start();
+		Command.cmd("cf", "apps").in(getAppList).err(Cf::toErrLogger).start();
 		return appList;
 	}
 
@@ -74,11 +75,21 @@ class Cf {
 	}
 
 	public static void logs(String appName) {
-		Command.cli("cf", "logs", appName).async().in(Cf::toOutLogger).err(Cf::toErrLogger).start();
+		Command.cmd("cf", "logs", appName).async().in(Cf::toOutLogger).err(Cf::toErrLogger).start();
 	}
 
-	public static void env(String app) {
-		Command.cli("cf", "env", app).async().in(Cf::toOutLogger).err(Cf::toErrLogger).start();
+	public static String env(String app) {
+		var stringBuilder = new StringBuilder();
+		Consumer<InputStream> getEnc = is -> {
+			stringBuilder
+					.append(new BufferedReader(new InputStreamReader(is)).lines().dropWhile(line -> !line.equals("{"))
+							.takeWhile(line -> !line.equals("}")).collect(Collectors.joining("\n", "", "\n}")));
+			if (stringBuilder.length() == 1) {
+				stringBuilder.deleteCharAt(0);
+			}
+		};
+		Command.cmd("cf", "env", app).in(getEnc).err(Cf::toErrLogger).start();
+		return stringBuilder.toString();
 	}
 
 	private static void toOutLogger(InputStream is) {

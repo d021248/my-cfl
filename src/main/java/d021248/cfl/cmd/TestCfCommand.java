@@ -13,8 +13,12 @@ public class TestCfCommand {
         // CfCommand.env("mkv-srv");
 
         Cf.logs();
+
+        var env = Cf.env("mkv-srv");
+        System.out.println(env);
+
         Thread.sleep(20_000);
-        Command.stopAll();
+        // Command.stopAll();
 
         var target = Cf.target();
         System.out.println(target.endpoint);

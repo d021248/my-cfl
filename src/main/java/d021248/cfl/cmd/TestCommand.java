@@ -12,18 +12,18 @@ public class TestCommand {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		System.out.println();
-		Command.cli("cf", "env", "mkv-srv").in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+		Command.cmd("cf", "env", "mkv-srv").in(TestCommand::handlerIn).out(TestCommand::handlerOut)
 				.err(TestCommand::handlerErr).start();
 
 		System.out.println();
 
 		System.out.println();
-		Command.cli("cmd").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr)
+		Command.cmd("cmd").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr)
 				.start();
 		System.out.println();
 
 		System.out.println();
-		Command.cli("notepad").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+		Command.cmd("notepad").async().in(TestCommand::handlerIn).out(TestCommand::handlerOut)
 				.err(TestCommand::handlerErr).start();
 		System.out.println();
 
