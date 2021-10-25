@@ -15,11 +15,10 @@ import java.util.stream.Collectors;
 
 class Cf {
 
-	private static Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
-
-	private static Pattern APPS_PATTERN = Pattern
+	private static final Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
+	private static final Pattern APPS_PATTERN = Pattern
 			.compile("^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$");
-	private final static String CF = System.getProperty("CFL", "cf");
+	private static final String CF = System.getProperty("CFL", "cf");
 	private static Consumer<String> outLogger = System.out::println;
 	private static Consumer<String> errLogger = System.err::println;
 
@@ -28,11 +27,26 @@ class Cf {
 	}
 
 	public static Command cmd(String... cmd) {
-		return Command.cmd(cmd).in(Cf::toOutLogger).err(Cf::toErrLogger);
+		return Command.cmd(cmd).sync().in(Cf::toOutLogger).err(Cf::toErrLogger);
+	}
+
+	public static void setOutLogger(Consumer<String> logger) {
+		Cf.outLogger = logger;
+	}
+
+	public Consumer<String> getOutLogger() {
+		return Cf.outLogger;
+	}
+
+	public static void setErrLogger(Consumer<String> logger) {
+		Cf.errLogger = logger;
+	}
+
+	public Consumer<String> getErrLogger() {
+		return Cf.errLogger;
 	}
 
 	public static Target target() {
-
 		var attrList = new ArrayList<String>();
 
 		// @formatter:off
@@ -55,7 +69,6 @@ class Cf {
 	}
 
 	public static List<App> apps() {
-
 		var appList = new ArrayList<App>();
 
 		// @formatter:off
@@ -113,7 +126,7 @@ class Cf {
 
 			env[0] = result;
 		};
-		// @formatter:ff
+		// @formatter:on
 
 		Command.cmd("cf", "env", app).in(getEnc).err(Cf::toErrLogger).start();
 		return env[0];
