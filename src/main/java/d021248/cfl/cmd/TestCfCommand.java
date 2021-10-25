@@ -5,14 +5,14 @@ import java.io.IOException;
 public class TestCfCommand {
     public static void main(String[] args) throws InterruptedException, IOException {
         // CfCommand.logs("mkv-srv");
-        // var list = CfCommand.apps();
-        // list.stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
+        var apps = Cf.apps();
+        apps.stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
 
         // System.out.println(list);
 
         // CfCommand.env("mkv-srv");
 
-        Cf.logs();
+        // Cf.logs();
 
         var env = Cf.env("mkv-srv");
         System.out.println(env);

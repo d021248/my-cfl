@@ -101,9 +101,12 @@ class Cf {
 			} catch (IOException e) {
 				Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
 			}
+
 			if (result == null || result.equals("\n}")) {
 				result = "{}";
 			}
+			
+			env[0] = result;
 		};
 		// @formatter:ff
 
