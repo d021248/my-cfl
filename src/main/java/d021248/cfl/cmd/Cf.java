@@ -79,17 +79,16 @@ class Cf {
 	}
 
 	public static String env(String app) {
-		var stringBuilder = new StringBuilder();
+		var env = new String[1];
 		Consumer<InputStream> getEnc = is -> {
-			stringBuilder
-					.append(new BufferedReader(new InputStreamReader(is)).lines().dropWhile(line -> !line.equals("{"))
-							.takeWhile(line -> !line.equals("}")).collect(Collectors.joining("\n", "", "\n}")));
-			if (stringBuilder.length() == 1) {
-				stringBuilder.deleteCharAt(0);
+			env[0] = new BufferedReader(new InputStreamReader(is)).lines().dropWhile(line -> !line.equals("{"))
+					.takeWhile(line -> !line.equals("}")).collect(Collectors.joining("\n", "", "\n}"));
+			if (env[0].equals("\n}")) {
+				env[0] = "{}";
 			}
 		};
 		Command.cmd("cf", "env", app).in(getEnc).err(Cf::toErrLogger).start();
-		return stringBuilder.toString();
+		return env[0];
 	}
 
 	private static void toOutLogger(InputStream is) {
