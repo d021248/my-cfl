@@ -100,7 +100,7 @@ public class CfLoggerUi {
         var buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        // we need this to set the name of the SPACE in the title
+        // we need this to set the name of the SPACE in the title!!
         Consumer<String> space2titleLogger = s -> {
             var space = Cf.target().space;
             frame.setTitle(TITLE.replace("cfLogger", space));
