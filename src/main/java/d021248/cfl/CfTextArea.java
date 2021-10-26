@@ -25,8 +25,7 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     private int fontSize = 11;
 
     private final DefaultHighlightPainter defaultHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
-        null
-    );
+            null);
 
     private final CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
 
@@ -43,8 +42,8 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         setOpaque(false);
 
         // setFont(new Font("Verdana", Font.PLAIN, 10));
-        // setFont(new Font("Monospaced", Font.PLAIN, fontSize));
-        setFont(new Font("Courier", Font.PLAIN, 11));
+        setFont(new Font("Monospaced", Font.PLAIN, fontSize));
+        // setFont(new Font("Courier", Font.PLAIN, 11));
         // setFont(new Font("Helvetica", Font.PLAIN, 11));
         // setFont(new Font("Arial", Font.PLAIN, 12));
     }

@@ -39,7 +39,7 @@ import javax.swing.UIManager;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
 
-public class CfLoggerUi {
+public class CfLoggerUI {
 
     private static final String TITLE = ".-=:#[ cfLogger ]#:=-.";
     private static final String LOGO = "D021248.jpg";
@@ -61,7 +61,7 @@ public class CfLoggerUi {
     private boolean isControlKeyDown = false;
     private boolean isScrollingOn = false;
 
-    public CfLoggerUi() {
+    public CfLoggerUI() {
         Cf.setErrLogger(this::log);
         Cf.setOutLogger(this::log);
         SwingUtilities.invokeLater(this::initialize);
@@ -73,7 +73,8 @@ public class CfLoggerUi {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {}
+        } catch (Exception ex) {
+        }
 
         var frame = new JFrame(TITLE);
 
@@ -83,7 +84,8 @@ public class CfLoggerUi {
         BufferedImage image = null;
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         // ------------------------------------------------------------------
         // add the TextArea
@@ -108,7 +110,7 @@ public class CfLoggerUi {
         };
 
         // this is the action listener for button 'cf target'
-        ActionListener cfTargetActionListener = e -> this.log(Cf.target().space);
+        ActionListener cfTargetActionListener = e -> space2titleLogger.accept(Cf.target().space);
         cfTargetActionListener.actionPerformed(null); // we execute it here right away to set the name of the SPACE in
         // the title
 
@@ -117,11 +119,12 @@ public class CfLoggerUi {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        // cfAppsButton.addActionListener(e -> CfApplicationSelector.getInstance(this, textArea));
+        // cfAppsButton.addActionListener(e -> CfApplicationSelector.getInstance(this,
+        // textArea));
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
-        //cfLogsButton.addActionListener(e -> CfCommandLogger.logApplicationList(this));
+        cfLogsButton.addActionListener(e -> Cf.logs());
         buttonPanel.add(cfLogsButton);
 
         // ------------------------------------------------------------------
@@ -141,17 +144,15 @@ public class CfLoggerUi {
         buttonPanel.add(clearButton);
 
         JButton toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
-        toggleScrollButton.addActionListener(
-            e -> {
-                if (textArea.isScrollingOn()) {
-                    toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                    textArea.setScrolling(false);
-                } else {
-                    toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                    textArea.setScrolling(true);
-                }
+        toggleScrollButton.addActionListener(e -> {
+            if (textArea.isScrollingOn()) {
+                toggleScrollButton.setText(BT_START_AUTO_SCROLL);
+                textArea.setScrolling(false);
+            } else {
+                toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
+                textArea.setScrolling(true);
             }
-        );
+        });
         buttonPanel.add(toggleScrollButton);
 
         // ------------------------------------------------------------------
@@ -193,59 +194,51 @@ public class CfLoggerUi {
             return s;
         };
 
-        toggleFilterButton.addActionListener(
-            e -> {
-                if (!textArea.isHighlightOn()) {
-                    return;
-                }
-
-                if (textArea.isFilterOn()) {
-                    toggleFilterButton.setText(BT_FILTER_ON);
-                    textArea.setFilter(false);
-                } else {
-                    toggleFilterButton.setText(BT_FILTER_OFF);
-                    textArea.setFilter(true);
-                }
+        toggleFilterButton.addActionListener(e -> {
+            if (!textArea.isHighlightOn()) {
+                return;
             }
-        );
+
+            if (textArea.isFilterOn()) {
+                toggleFilterButton.setText(BT_FILTER_ON);
+                textArea.setFilter(false);
+            } else {
+                toggleFilterButton.setText(BT_FILTER_OFF);
+                textArea.setFilter(true);
+            }
+        });
         toggleFilterButton.setEnabled(false);
-        filterValueTextField.addKeyListener(
-            new KeyAdapter() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                    if (!filterValue.startsWith(">")) {
-                        setHighlight.apply(filterValue, false);
-                    }
-                }
-
-                public void keyPressed(KeyEvent keyEvent) {
-                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                    if (filterValue.startsWith(">")) {
-                        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                            String command = filterValue.substring(1).trim();
-                            command = (command.startsWith("cf") ? "" : "CMD /C ") + command;
-                            // TODO  CfCommandLogger.logCommand(CfLoggerUI2.this, command);
-                            setHighlight.apply("", false);
-                        }
-                    }
-                }
-
-                public String getPrintableChar(char c) {
-                    return isPrintableChar(c) ? "" + c : "";
-                }
-
-                public boolean isPrintableChar(char c) {
-                    Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-                    return (
-                        (!Character.isISOControl(c)) &&
-                        c != KeyEvent.CHAR_UNDEFINED &&
-                        block != null &&
-                        block != Character.UnicodeBlock.SPECIALS
-                    );
+        filterValueTextField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent) {
+                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                if (!filterValue.startsWith(">")) {
+                    setHighlight.apply(filterValue, false);
                 }
             }
-        );
+
+            public void keyPressed(KeyEvent keyEvent) {
+                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                if (filterValue.startsWith(">")) {
+                    if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                        String command = filterValue.substring(1).trim();
+                        command = (command.startsWith("cf") ? "" : "CMD /C ") + command;
+                        // TODO CfCommandLogger.logCommand(CfLoggerUI2.this, command);
+                        setHighlight.apply("", false);
+                    }
+                }
+            }
+
+            public String getPrintableChar(char c) {
+                return isPrintableChar(c) ? "" + c : "";
+            }
+
+            public boolean isPrintableChar(char c) {
+                Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+                return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
+                        && block != Character.UnicodeBlock.SPECIALS);
+            }
+        });
 
         JPanel filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
@@ -317,19 +310,17 @@ public class CfLoggerUi {
         // after the declarations of these ui elements!
         // ------------------------------------------------------------------
 
-        textArea.addKeyListener(
-            new KeyAdapter() {
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    isControlKeyDown = e.isControlDown();
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    isControlKeyDown = e.isControlDown();
-                }
+        textArea.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                isControlKeyDown = e.isControlDown();
             }
-        );
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                isControlKeyDown = e.isControlDown();
+            }
+        });
 
         MouseAdapter textAreaMouseAdapter = new MouseAdapter() {
             boolean isDraggedOn = false;
@@ -375,8 +366,10 @@ public class CfLoggerUi {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                // don't switch scrolling on again - otherwise screen will always move to the end
-                // toggleScrollButton.setText(isScrollingOn ? BT_STOP_AUTO_SCROLL : BT_START_AUTO_SCROLL);
+                // don't switch scrolling on again - otherwise screen will always move to the
+                // end
+                // toggleScrollButton.setText(isScrollingOn ? BT_STOP_AUTO_SCROLL :
+                // BT_START_AUTO_SCROLL);
                 // textArea.setScrolling(isScrollingOn);
 
                 super.mouseReleased(e);
@@ -452,7 +445,8 @@ public class CfLoggerUi {
                     } else {
                         setHighlight.apply(selectedWord, true);
                     }
-                } catch (BadLocationException e1) {}
+                } catch (BadLocationException e1) {
+                }
             }
 
             @Override
@@ -479,12 +473,8 @@ public class CfLoggerUi {
 
     private void save() {
         try {
-            Path path = Files.write(
-                Paths.get(SAVE_FILEPATH),
-                textArea.getText().getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING
-            );
+            Path path = Files.write(Paths.get(SAVE_FILEPATH), textArea.getText().getBytes(), StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
             Desktop desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();
