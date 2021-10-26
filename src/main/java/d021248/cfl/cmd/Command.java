@@ -12,134 +12,133 @@ import java.util.stream.Collectors;
 
 class Command {
 
-	private static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
+    private static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
 
-	private Process process = null;
-	private Thread tin = null;
-	private Thread tout = null;
-	private Thread terr = null;
-	private final String[] cmd;
+    private Process process = null;
+    private Thread tin = null;
+    private Thread tout = null;
+    private Thread terr = null;
+    private final String[] cmd;
 
-	private Consumer<InputStream> in = null;
-	private Consumer<OutputStream> out = null;
-	private Consumer<InputStream> err = null;
-	private boolean async = false;
+    private Consumer<InputStream> in = null;
+    private Consumer<OutputStream> out = null;
+    private Consumer<InputStream> err = null;
+    private boolean async = false;
 
-	private Command(String... cmd) {
-		this.cmd = cmd;
-	}
+    private Command(String... cmd) {
+        this.cmd = cmd;
+    }
 
-	public static Command cmd(String... cmd) {
-		return new Command(cmd);
-	}
+    public static Command cmd(String... cmd) {
+        return new Command(cmd);
+    }
 
-	public Command in(Consumer<InputStream> in) {
-		this.in = in;
-		return this;
-	}
+    public Command in(Consumer<InputStream> in) {
+        this.in = in;
+        return this;
+    }
 
-	public Command out(Consumer<OutputStream> out) {
-		this.out = out;
-		return this;
-	}
+    public Command out(Consumer<OutputStream> out) {
+        this.out = out;
+        return this;
+    }
 
-	public Command err(Consumer<InputStream> err) {
-		this.err = err;
-		return this;
-	}
+    public Command err(Consumer<InputStream> err) {
+        this.err = err;
+        return this;
+    }
 
-	public Command async() {
-		this.async = true;
-		return this;
-	}
+    public Command async() {
+        this.async = true;
+        return this;
+    }
 
-	public Command sync() {
-		this.async = false;
-		return this;
-	}
+    public Command sync() {
+        this.async = false;
+        return this;
+    }
 
-	public static void stopAll() {
-		while (!activeList.isEmpty()) {
-			activeList.get(0).stop();
-		}
-	}
+    public static void stopAll() {
+        while (!activeList.isEmpty()) {
+            activeList.get(0).stop();
+        }
+    }
 
-	public void stop() {
-		if (!activeList.contains(this)) {
-			return;
-		}
+    public void stop() {
+        if (!activeList.contains(this)) {
+            return;
+        }
 
-		if (process != null) {
-			process.destroy();
-		}
+        if (process != null) {
+            process.destroy();
+        }
 
-		if (tin != null) {
-			tin.stop();
-		}
+        if (tin != null) {
+            tin.stop();
+        }
 
-		if (tout != null) {
-			tout.stop();
-		}
+        if (tout != null) {
+            tout.stop();
+        }
 
-		if (terr != null) {
-			terr.stop();
-		}
+        if (terr != null) {
+            terr.stop();
+        }
 
-		activeList.remove(this);
-	}
+        activeList.remove(this);
+    }
 
-	public int start() {
-		if (async) {
-			new Thread(() -> startRelaxed(in, out, err)).start();
-			return 0;
-		}
-		return startRelaxed(in, out, err);
-	}
+    public int start() {
+        if (async) {
+            new Thread(() -> startRelaxed(in, out, err)).start();
+            return 0;
+        }
+        return startRelaxed(in, out, err);
+    }
 
-	protected int startRelaxed(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
-		try {
-			return start(in, out, err);
-		} catch (Throwable t) {
-			throw new RuntimeException(t);
-		}
-	}
+    protected int startRelaxed(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
+        try {
+            return start(in, out, err);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
 
-	protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-			throws IOException, InterruptedException {
+    protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
+        throws IOException, InterruptedException {
+        if (process != null) {
+            throw new IOException(String.format("Command already started: %s", this));
+        }
 
-		if (process != null) {
-			throw new IOException(String.format("Command already started: %s", this));
-		}
+        activeList.add(this);
+        process = new ProcessBuilder().command(cmd).start();
 
-		activeList.add(this);
-		process = new ProcessBuilder().command(cmd).start();
+        if (in != null) {
+            tin = new Thread(() -> in.accept(process.getInputStream()));
+            tin.start();
+        }
 
-		if (in != null) {
-			tin = new Thread(() -> in.accept(process.getInputStream()));
-			tin.start();
-		}
+        if (out != null) {
+            tout = new Thread(() -> out.accept(process.getOutputStream()));
+            tout.start();
+        }
 
-		if (out != null) {
-			tout = new Thread(() -> out.accept(process.getOutputStream()));
-			tout.start();
-		}
+        if (err != null) {
+            terr = new Thread(() -> err.accept(process.getErrorStream()));
+            terr.start();
+        }
 
-		if (err != null) {
-			terr = new Thread(() -> err.accept(process.getErrorStream()));
-			terr.start();
-		}
+        var result = process.waitFor();
+        stop();
+        return result;
+    }
 
-		var result = process.waitFor();
-		stop();
-		return result;
-	}
+    public String cmd() {
+        return Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
+    }
 
-	public String cmd() {
-		return Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
-	}
-
-	@Override
-	public String toString() {
-		return String.format("%s(\"%s\")", this.getClass().getSimpleName(), cmd());
-	}
+    @Override
+    public String toString() {
+        return String.format("%s(\"%s\")", this.getClass().getSimpleName(), cmd());
+    }
 }

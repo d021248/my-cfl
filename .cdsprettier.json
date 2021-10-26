@@ -1,0 +1,7 @@
+{
+  "alignColonsInAnnotations": true,
+  "alignValuesInAnnotations": true,
+  "keepAnnotationsInOriginalLine": "separateLine",
+  "keepOriginalEmptyLines": false,
+  "selectInNewLine": true
+}

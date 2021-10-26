@@ -1,6 +1,7 @@
 package d021248.cfl.cmd;
 
 public class Target {
+
     public final String endpoint;
     public final String version;
     public final String user;

@@ -31,3 +31,8 @@ hs_err_pid*
 
 SpotifyCredentials.java
 *.csv
+
+
+node/
+node_modules/
+*/**/dist
