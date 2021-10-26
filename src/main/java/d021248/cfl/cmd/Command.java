@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-class Command {
+public class Command {
 
     private static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
 
