@@ -11,33 +11,18 @@ public class TestCommand {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println();
-        Command
-            .cmd("cf", "env", "mkv-srv")
-            .in(TestCommand::handlerIn)
-            .out(TestCommand::handlerOut)
-            .err(TestCommand::handlerErr)
-            .start();
+        Command.cmd("cf env mkv-srv").in(TestCommand::handlerIn).out(TestCommand::handlerOut)
+                .err(TestCommand::handlerErr).start();
 
         System.out.println();
 
         System.out.println();
-        Command
-            .cmd("cmd")
-            .async()
-            .in(TestCommand::handlerIn)
-            .out(TestCommand::handlerOut)
-            .err(TestCommand::handlerErr)
-            .start();
+        Command.cmd("cmd").in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr).start();
         System.out.println();
 
         System.out.println();
-        Command
-            .cmd("notepad")
-            .async()
-            .in(TestCommand::handlerIn)
-            .out(TestCommand::handlerOut)
-            .err(TestCommand::handlerErr)
-            .start();
+        Command.cmd("notepad").in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr)
+                .start();
         System.out.println();
 
         Thread.sleep(15_000);
@@ -55,17 +40,15 @@ public class TestCommand {
                 os.write(c);
                 os.flush();
             }
-        } catch (IOException e) {}
+        } catch (IOException e) {
+        }
     }
 
     private static void handlerErr(InputStream is) {
         System.out.println("starting handlerErr()");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader
-                .lines()
-                .filter(Predicate.not(String::isEmpty))
-                .map(String::trim)
-                .forEach(line -> System.out.println("err>>" + line));
+            bufferedReader.lines().filter(Predicate.not(String::isEmpty)).map(String::trim)
+                    .forEach(line -> System.out.println("err>>" + line));
         } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
         }
@@ -74,11 +57,8 @@ public class TestCommand {
     private static void handlerIn(InputStream is) {
         System.out.println("starting handlerIn()");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader
-                .lines()
-                .filter(Predicate.not(String::isEmpty))
-                .map(String::trim)
-                .forEach(line -> System.out.println("out>>" + line));
+            bufferedReader.lines().filter(Predicate.not(String::isEmpty)).map(String::trim)
+                    .forEach(line -> System.out.println("out>>" + line));
         } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
         }

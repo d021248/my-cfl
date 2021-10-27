@@ -26,7 +26,7 @@ public class Cf {
     }
 
     public static Command cmd(String... cmd) {
-        return Command.cmd(cmd).sync().in(Cf::toOutLogger).err(Cf::toErrLogger);
+        return Command.cmd(cmd).in(Cf::toOutLogger).err(Cf::toErrLogger);
     }
 
     public static void setOutLogger(Consumer<String> logger) {
@@ -88,7 +88,7 @@ public class Cf {
     public static void logs(String appName) {
         var cmd = String.format("cf logs %s", appName);
         Cf.outLogger.accept(cmd);
-        Command.cmd(cmd).async().in(Cf::toOutLogger).err(Cf::toErrLogger).start();
+        Command.cmd(cmd).in(Cf::toOutLogger).err(Cf::toErrLogger).start();
     }
 
     public static String env(String app) {

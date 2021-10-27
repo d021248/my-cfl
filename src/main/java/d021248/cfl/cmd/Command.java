@@ -23,7 +23,6 @@ public class Command {
     private Consumer<InputStream> in = null;
     private Consumer<OutputStream> out = null;
     private Consumer<InputStream> err = null;
-    private boolean async = false;
 
     private Command(String... cmd) {
         this.cmd = cmd;
@@ -49,16 +48,6 @@ public class Command {
 
     public Command err(Consumer<InputStream> err) {
         this.err = err;
-        return this;
-    }
-
-    public Command async() {
-        this.async = true;
-        return this;
-    }
-
-    public Command sync() {
-        this.async = false;
         return this;
     }
 
@@ -93,23 +82,16 @@ public class Command {
     }
 
     public int start() {
-        if (async) {
-            new Thread(() -> startRelaxed(in, out, err)).start();
-            return 0;
-        }
-        return startRelaxed(in, out, err);
-    }
-
-    protected int startRelaxed(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err) {
         try {
             return start(in, out, err);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        } catch (IOException | InterruptedException e) {
+            return -666;
         }
+
     }
 
     protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }

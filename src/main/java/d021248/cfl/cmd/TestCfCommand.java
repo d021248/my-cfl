@@ -5,7 +5,7 @@ import java.io.IOException;
 public class TestCfCommand {
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        Cf.cmd("cf", "restage", "mkv-srv").async().start();
+        Cf.cmd("cf restage mkv-srv").start();
 
         var apps = Cf.apps();
         apps.stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
