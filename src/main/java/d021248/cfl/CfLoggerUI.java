@@ -73,8 +73,7 @@ public class CfLoggerUI {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-        }
+        } catch (Exception ex) {}
 
         var frame = new JFrame(TITLE);
 
@@ -84,8 +83,7 @@ public class CfLoggerUI {
         BufferedImage image = null;
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
 
         // ------------------------------------------------------------------
         // add the TextArea
@@ -144,15 +142,17 @@ public class CfLoggerUI {
         buttonPanel.add(clearButton);
 
         JButton toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
-        toggleScrollButton.addActionListener(e -> {
-            if (textArea.isScrollingOn()) {
-                toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                textArea.setScrolling(false);
-            } else {
-                toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                textArea.setScrolling(true);
+        toggleScrollButton.addActionListener(
+            e -> {
+                if (textArea.isScrollingOn()) {
+                    toggleScrollButton.setText(BT_START_AUTO_SCROLL);
+                    textArea.setScrolling(false);
+                } else {
+                    toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
+                    textArea.setScrolling(true);
+                }
             }
-        });
+        );
         buttonPanel.add(toggleScrollButton);
 
         // ------------------------------------------------------------------
@@ -194,51 +194,59 @@ public class CfLoggerUI {
             return s;
         };
 
-        toggleFilterButton.addActionListener(e -> {
-            if (!textArea.isHighlightOn()) {
-                return;
-            }
+        toggleFilterButton.addActionListener(
+            e -> {
+                if (!textArea.isHighlightOn()) {
+                    return;
+                }
 
-            if (textArea.isFilterOn()) {
-                toggleFilterButton.setText(BT_FILTER_ON);
-                textArea.setFilter(false);
-            } else {
-                toggleFilterButton.setText(BT_FILTER_OFF);
-                textArea.setFilter(true);
-            }
-        });
-        toggleFilterButton.setEnabled(false);
-        filterValueTextField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent keyEvent) {
-                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                if (!filterValue.startsWith(">")) {
-                    setHighlight.apply(filterValue, false);
+                if (textArea.isFilterOn()) {
+                    toggleFilterButton.setText(BT_FILTER_ON);
+                    textArea.setFilter(false);
+                } else {
+                    toggleFilterButton.setText(BT_FILTER_OFF);
+                    textArea.setFilter(true);
                 }
             }
-
-            public void keyPressed(KeyEvent keyEvent) {
-                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                if (filterValue.startsWith(">")) {
-                    if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                        String command = filterValue.substring(1).trim();
-                        command = (command.startsWith("cf") ? "" : "CMD /C ") + command;
-                        // TODO CfCommandLogger.logCommand(CfLoggerUI2.this, command);
-                        setHighlight.apply("", false);
+        );
+        toggleFilterButton.setEnabled(false);
+        filterValueTextField.addKeyListener(
+            new KeyAdapter() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                    if (!filterValue.startsWith(">")) {
+                        setHighlight.apply(filterValue, false);
                     }
                 }
-            }
 
-            public String getPrintableChar(char c) {
-                return isPrintableChar(c) ? "" + c : "";
-            }
+                public void keyPressed(KeyEvent keyEvent) {
+                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                    if (filterValue.startsWith(">")) {
+                        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                            String command = filterValue.substring(1).trim();
+                            command = (command.startsWith("cf") ? "" : "CMD /C ") + command;
+                            // TODO CfCommandLogger.logCommand(CfLoggerUI2.this, command);
+                            setHighlight.apply("", false);
+                        }
+                    }
+                }
 
-            public boolean isPrintableChar(char c) {
-                Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-                return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
-                        && block != Character.UnicodeBlock.SPECIALS);
+                public String getPrintableChar(char c) {
+                    return isPrintableChar(c) ? "" + c : "";
+                }
+
+                public boolean isPrintableChar(char c) {
+                    Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+                    return (
+                        (!Character.isISOControl(c)) &&
+                        c != KeyEvent.CHAR_UNDEFINED &&
+                        block != null &&
+                        block != Character.UnicodeBlock.SPECIALS
+                    );
+                }
             }
-        });
+        );
 
         JPanel filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
@@ -310,17 +318,19 @@ public class CfLoggerUI {
         // after the declarations of these ui elements!
         // ------------------------------------------------------------------
 
-        textArea.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                isControlKeyDown = e.isControlDown();
-            }
+        textArea.addKeyListener(
+            new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    isControlKeyDown = e.isControlDown();
+                }
 
-            @Override
-            public void keyReleased(KeyEvent e) {
-                isControlKeyDown = e.isControlDown();
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    isControlKeyDown = e.isControlDown();
+                }
             }
-        });
+        );
 
         MouseAdapter textAreaMouseAdapter = new MouseAdapter() {
             boolean isDraggedOn = false;
@@ -445,8 +455,7 @@ public class CfLoggerUI {
                     } else {
                         setHighlight.apply(selectedWord, true);
                     }
-                } catch (BadLocationException e1) {
-                }
+                } catch (BadLocationException e1) {}
             }
 
             @Override
@@ -473,8 +482,12 @@ public class CfLoggerUI {
 
     private void save() {
         try {
-            Path path = Files.write(Paths.get(SAVE_FILEPATH), textArea.getText().getBytes(), StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
+            Path path = Files.write(
+                Paths.get(SAVE_FILEPATH),
+                textArea.getText().getBytes(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            );
             Desktop desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();

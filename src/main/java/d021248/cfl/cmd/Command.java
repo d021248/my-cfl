@@ -29,6 +29,10 @@ public class Command {
         this.cmd = cmd;
     }
 
+    public static Command cmd(String cmd) {
+        return new Command(cmd.split(" "));
+    }
+
     public static Command cmd(String... cmd) {
         return new Command(cmd);
     }

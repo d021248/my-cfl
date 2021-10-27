@@ -25,7 +25,8 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     private int fontSize = 11;
 
     private final DefaultHighlightPainter defaultHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
-            null);
+        null
+    );
 
     private final CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
 
