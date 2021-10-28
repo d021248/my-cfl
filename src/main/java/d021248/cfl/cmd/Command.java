@@ -28,10 +28,6 @@ public class Command {
         this.cmd = cmd;
     }
 
-    public static Command cmd(String cmd) {
-        return new Command(cmd.split(" "));
-    }
-
     public static Command cmd(String... cmd) {
         return new Command(cmd);
     }
@@ -87,11 +83,10 @@ public class Command {
         } catch (IOException | InterruptedException e) {
             return -666;
         }
-
     }
 
     protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }

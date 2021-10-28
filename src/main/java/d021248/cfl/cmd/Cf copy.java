@@ -13,17 +13,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Cf {
+public class Cxf {
 
     private static final Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
-    private static final Pattern APPS_PATTERN = Pattern
-            .compile("^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$");
+    private static final Pattern APPS_PATTERN = Pattern.compile(
+        "^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$"
+    );
     private static final String CF = System.getProperty("CFL", "cf");
     private static Consumer<String> outLogger = System.out::println;
     private static Consumer<String> errLogger = System.err::println;
 
-    private Cf() {
-    }
+    private Cf() {}
 
     public static Command cmd(String... cmd) {
         return Command.cmd(cmd).sync().in(Cf::toOutLogger).err(Cf::toErrLogger);
@@ -49,8 +49,12 @@ public class Cf {
         var attrList = new ArrayList<String>();
         Consumer<InputStream> getTarget = is -> {
             try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-                bufferedReader.lines().map(TARGET_PATTERN::matcher).filter(Matcher::matches)
-                        .map(matcher -> matcher.group(1)).forEach(attrList::add);
+                bufferedReader
+                    .lines()
+                    .map(TARGET_PATTERN::matcher)
+                    .filter(Matcher::matches)
+                    .map(matcher -> matcher.group(1))
+                    .forEach(attrList::add);
             } catch (IOException e) {
                 Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
             }
@@ -65,10 +69,22 @@ public class Cf {
 
         Consumer<InputStream> getAppList = is -> {
             try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-                bufferedReader.lines().map(APPS_PATTERN::matcher).filter(Matcher::matches)
-                        .map(matcher -> new App(matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(4),
-                                matcher.group(5), matcher.group(6)))
-                        .forEach(appList::add);
+                bufferedReader
+                    .lines()
+                    .map(APPS_PATTERN::matcher)
+                    .filter(Matcher::matches)
+                    .map(
+                        matcher ->
+                            new App(
+                                matcher.group(1),
+                                matcher.group(2),
+                                matcher.group(3),
+                                matcher.group(4),
+                                matcher.group(5),
+                                matcher.group(6)
+                            )
+                    )
+                    .forEach(appList::add);
             } catch (IOException e) {
                 Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
             }
@@ -97,8 +113,12 @@ public class Cf {
         Consumer<InputStream> getEnv = is -> {
             String result = null;
             try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-                result = bufferedReader.lines().dropWhile(line -> !line.equals("{"))
-                        .takeWhile(line -> !line.equals("}")).collect(Collectors.joining("\n", "", "\n}"));
+                result =
+                    bufferedReader
+                        .lines()
+                        .dropWhile(line -> !line.equals("{"))
+                        .takeWhile(line -> !line.equals("}"))
+                        .collect(Collectors.joining("\n", "", "\n}"));
             } catch (IOException e) {
                 Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
             }
