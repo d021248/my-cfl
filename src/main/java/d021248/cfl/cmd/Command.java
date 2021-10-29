@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class Command {
+public class Command implements Runnable {
 
     private static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
 
@@ -60,6 +60,8 @@ public class Command {
             return;
         }
 
+        System.out.println("stopping: " + command);
+
         if (process != null) {
             process.destroy();
         }
@@ -79,15 +81,15 @@ public class Command {
         activeList.remove(this);
     }
 
-    public int start() {
+    public void run() {
+        System.out.println("starting: " + command);
+
         try {
-            return start(in, out, err);
-        } catch (IOException | InterruptedException e) {
-            return -666;
-        }
+            run(in, out, err);
+        } catch (IOException | InterruptedException e) {}
     }
 
-    protected int start(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
+    protected int run(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
         throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));

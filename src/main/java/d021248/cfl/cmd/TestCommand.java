@@ -16,12 +16,12 @@ public class TestCommand {
             .in(TestCommand::handlerIn)
             .out(TestCommand::handlerOut)
             .err(TestCommand::handlerErr)
-            .start();
+            .run();
 
         System.out.println();
 
         System.out.println();
-        Command.cmd("cmd").in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr).start();
+        Command.cmd("cmd").in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr).run();
         System.out.println();
 
         System.out.println();
@@ -30,7 +30,7 @@ public class TestCommand {
             .in(TestCommand::handlerIn)
             .out(TestCommand::handlerOut)
             .err(TestCommand::handlerErr)
-            .start();
+            .run();
         System.out.println();
 
         Thread.sleep(15_000);
