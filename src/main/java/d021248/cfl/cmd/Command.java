@@ -19,6 +19,7 @@ public class Command {
     private Thread tout = null;
     private Thread terr = null;
     private final String[] cmd;
+    private final String command;
 
     private Consumer<InputStream> in = null;
     private Consumer<OutputStream> out = null;
@@ -26,6 +27,7 @@ public class Command {
 
     private Command(String... cmd) {
         this.cmd = cmd;
+        this.command = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
     }
 
     public static Command cmd(String... cmd) {
@@ -115,11 +117,15 @@ public class Command {
     }
 
     public String cmd() {
-        return Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
+        return command;
     }
 
     @Override
     public String toString() {
         return String.format("%s(\"%s\")", this.getClass().getSimpleName(), cmd());
+    }
+
+    public static List<Command> activeList() {
+        return new ArrayList<>(activeList);
     }
 }
