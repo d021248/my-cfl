@@ -128,7 +128,7 @@ public class CfLoggerUI {
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
-        cfLogsButton.addActionListener(e -> Cf.logs());
+        cfLogsButton.addActionListener(e -> new Thread(Cf::logs).start());
         buttonPanel.add(cfLogsButton);
 
         // ------------------------------------------------------------------

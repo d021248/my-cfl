@@ -1,6 +1,6 @@
 package d021248.cfl.cmd;
 
-public class TestCfCommand {
+public class TestCf {
 
     public static void main(String[] args) throws InterruptedException {
         Cf.logs();
@@ -11,14 +11,14 @@ public class TestCfCommand {
         System.out.println(env);
         System.out.println("----------------------------------------------------------------------------------------");
 
-        //System.exit(0);
+        // System.exit(0);
 
-        var target = Cf.target();
+        var target = Cf.getTarget();
         System.out.println("----------------------------------------------------------------------------------------");
         System.out.println(target);
         System.out.println("----------------------------------------------------------------------------------------");
 
-        new Thread(() -> Cf.run("cf", "restage", "mkv-srv")).start();
+        new Thread(() -> Cf.cli("cf", "restage", "mkv-srv")).start();
         System.out.println("----------------------------------------------------------------------------------------");
 
         Cf.getApps().stream().forEach(a -> System.out.println(a.name + " : " + a.urls));

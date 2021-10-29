@@ -26,11 +26,11 @@ public class Cf {
 
     private Cf() {}
 
-    public static List<String> run(String... cmd) {
-        return run(true, cmd);
+    public static List<String> cli(String... cmd) {
+        return cli(true, cmd);
     }
 
-    public static List<String> run(boolean silently, String... cmd) {
+    public static List<String> cli(boolean silently, String... cmd) {
         var lines = new ArrayList<String>();
         Consumer<InputStream> toStringBuilder = is -> toConsumer(is, UnaryOperator.identity(), lines::add);
         Command.cmd(cmd).in(toStringBuilder).err(toStringBuilder).run();
@@ -45,19 +45,19 @@ public class Cf {
     public static Target getTarget() {
         var attrList = new ArrayList<String>();
         Cf
-            .run("cf", "target")
+            .cli("cf", "target")
             .stream()
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(matcher -> matcher.group(1))
             .forEach(attrList::add);
-        return new Target(attrList.get(0), attrList.get(2), attrList.get(2), attrList.get(3), attrList.get(4));
+        return new Target(attrList.get(0), attrList.get(1), attrList.get(2), attrList.get(3), attrList.get(4));
     }
 
     public static List<App> getApps() {
         var appList = new ArrayList<App>();
         Cf
-            .run("cf", "apps")
+            .cli("cf", "apps")
             .stream()
             .map(APPS_PATTERN::matcher)
             .filter(Matcher::matches)
@@ -79,7 +79,7 @@ public class Cf {
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
         var envJson = Cf
-            .run("cf", "env", app)
+            .cli("cf", "env", app)
             .stream()
             .dropWhile(line -> !line.equals("{"))
             .takeWhile(line -> !line.equals("}"))
