@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,29 +27,25 @@ public class Cf {
     private Cf() {}
 
     public static List<String> run(String... cmd) {
-        return run(false, cmd);
+        return run(true, cmd);
     }
 
     public static List<String> run(boolean silently, String... cmd) {
         var lines = new ArrayList<String>();
-        Consumer<InputStream> toStringBuilder = is -> toConsumer(is, Function.identity(), lines::add);
+        Consumer<InputStream> toStringBuilder = is -> toConsumer(is, UnaryOperator.identity(), lines::add);
         Command.cmd(cmd).in(toStringBuilder).err(toStringBuilder).run();
         if (!silently) {
-            Cf.outLogger.accept(Arrays.asList(cmd).stream().collect(Collectors.joining(" ")));
+            Cf.outLogger.accept(Arrays.asList(cmd).stream().collect(Collectors.joining(" ", ">", "")));
             Cf.outLogger.accept(toString(lines));
             Cf.outLogger.accept(CRLF);
         }
         return lines;
     }
 
-    public static List<String> target() {
-        return Cf.run("cf", "target");
-    }
-
     public static Target getTarget() {
         var attrList = new ArrayList<String>();
         Cf
-            .target()
+            .run("cf", "target")
             .stream()
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
@@ -58,14 +54,10 @@ public class Cf {
         return new Target(attrList.get(0), attrList.get(2), attrList.get(2), attrList.get(3), attrList.get(4));
     }
 
-    public static List<String> apps() {
-        return Cf.run("cf", "apps");
-    }
-
     public static List<App> getApps() {
         var appList = new ArrayList<App>();
         Cf
-            .apps()
+            .run("cf", "apps")
             .stream()
             .map(APPS_PATTERN::matcher)
             .filter(Matcher::matches)
@@ -84,14 +76,10 @@ public class Cf {
         return appList;
     }
 
-    public static List<String> env(String app) {
-        return Cf.run("cf", "env", app);
-    }
-
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
         var envJson = Cf
-            .env(app)
+            .run("cf", "env", app)
             .stream()
             .dropWhile(line -> !line.equals("{"))
             .takeWhile(line -> !line.equals("}"))
@@ -107,22 +95,16 @@ public class Cf {
     }
 
     public static void logs(String appName) {
-        String cmd = String.format("cf logs %s", appName);
-        Function<String, String> mapper = s -> s.isEmpty() ? s : String.format("%s %s", appName, s);
+        var cmd = String.format("cf logs %s", appName);
+        UnaryOperator<String> formatter = s -> s.isEmpty() ? s : String.format("%s %s", appName, s.trim());
+        Consumer<InputStream> toOutputlogger = is -> toConsumer(is, formatter, Cf.outLogger);
         Command.activeList().stream().filter(c -> c.cmd().equals(cmd)).forEach(Command::stop);
-        new Thread(
-            Command.cmd("cf", "logs", appName).in(is -> toConsumer(is, mapper, Cf.outLogger)).err(Cf::toErrLogger)
-        )
-            .start();
+        new Thread(Command.cmd("cf", "logs", appName).in(toOutputlogger).err(toOutputlogger)).start();
     }
 
-    private static void toErrLogger(InputStream is) {
-        toConsumer(is, Function.identity(), Cf.errLogger);
-    }
-
-    private static void toConsumer(InputStream is, Function<String, String> mapper, Consumer<String> consumer) {
+    private static void toConsumer(InputStream is, UnaryOperator<String> formatter, Consumer<String> consumer) {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader.lines().map(mapper).forEach(consumer::accept);
+            bufferedReader.lines().map(formatter).forEach(consumer::accept);
         } catch (IOException e) {
             Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
         }
