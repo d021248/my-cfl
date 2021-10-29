@@ -101,14 +101,12 @@ public class CfLoggerUI {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         // we need this to set the name of the SPACE in the title!!
-        Consumer<String> space2titleLogger = s -> {
-            var space = Cf.target().space;
+        Consumer<String> space2titleLogger = space -> {
             frame.setTitle(TITLE.replace("cfLogger", space));
-            this.log(space);
         };
 
         // this is the action listener for button 'cf target'
-        ActionListener cfTargetActionListener = e -> space2titleLogger.accept(Cf.target().space);
+        ActionListener cfTargetActionListener = e -> space2titleLogger.accept(Cf.getTarget().space);
         cfTargetActionListener.actionPerformed(null); // we execute it here right away to set the name of the SPACE in
         // the title
 
@@ -117,8 +115,8 @@ public class CfLoggerUI {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        // cfAppsButton.addActionListener(e -> CfApplicationSelector.getInstance(this,
-        // textArea));
+        cfAppsButton.addActionListener(e -> Cf.apps());
+
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);

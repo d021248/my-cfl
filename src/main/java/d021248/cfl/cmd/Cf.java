@@ -36,6 +36,7 @@ public class Cf {
         if (!silently) {
             Cf.outLogger.accept(Arrays.asList(cmd).stream().collect(Collectors.joining(" ")));
             Cf.outLogger.accept(toString(lines));
+            Cf.outLogger.accept(CRLF);
         }
         return lines;
     }
@@ -118,7 +119,7 @@ public class Cf {
         toConsumer(is, Cf.errLogger);
     }
 
-    private static void toConsumer(InputStream is, Consumer<String> consumer) {
+    private static synchronized void toConsumer(InputStream is, Consumer<String> consumer) {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (IOException e) {
