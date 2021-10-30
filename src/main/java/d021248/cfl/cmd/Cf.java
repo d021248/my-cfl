@@ -83,7 +83,8 @@ public class Cf extends Shell {
     }
 
     public static void logs(String appName) {
-        var logAppCommand = Shell.cmd("cf", "logs", appName).outConsumer(outLogger);
+        Consumer<String> outConsumer = line -> Cf.outLogger.accept(String.format("%s %s", appName, line));
+        var logAppCommand = Shell.cmd("cf", "logs", appName).outConsumer(outConsumer);
         Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
     }

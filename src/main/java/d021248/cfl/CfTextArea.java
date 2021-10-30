@@ -43,19 +43,19 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     // ----------------------------------------------------------------------------------------
     // font
     // ----------------------------------------------------------------------------------------
-    public synchronized void increaseFontSize() {
+    public void increaseFontSize() {
         fontSize = (fontSize >= MAX_FONT_SIZE) ? MAX_FONT_SIZE : fontSize + 1;
         setFont(new Font(getFont().getName(), Font.PLAIN, fontSize));
         repaint();
     }
 
-    public synchronized void decreaseFontSize() {
+    public void decreaseFontSize() {
         fontSize = (fontSize <= MIN_FONT_SIZE) ? MIN_FONT_SIZE : fontSize - 1;
         setFont(new Font(getFont().getName(), Font.PLAIN, fontSize));
         repaint();
     }
 
-    public synchronized void changeFont() {
+    public void changeFont() {
         fontNameIndex = ++fontNameIndex % FONT_NAMES.size();
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
         repaint();

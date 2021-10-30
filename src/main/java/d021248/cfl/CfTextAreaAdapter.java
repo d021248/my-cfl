@@ -8,7 +8,7 @@ import java.awt.event.MouseWheelEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
 
-public class CfTextAreaAdapter {
+class CfTextAreaAdapter {
 
     private final CfTextArea textArea;
 
