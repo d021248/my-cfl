@@ -20,7 +20,7 @@ public class Cf {
         "^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$"
     );
     private static final String CF = System.getProperty("CFL", "cf");
-    private static final String CRLF = String.format("%n");
+    private static final String CRLF = System.getProperty("line.separator", "\n");
     private static Consumer<String> outLogger = System.out::println;
     private static Consumer<String> errLogger = System.err::println;
 
@@ -30,11 +30,11 @@ public class Cf {
         return cli(true, cmd);
     }
 
-    public static List<String> cli(boolean silently, String... cmd) {
+    public static List<String> cli(boolean isSilentMode, String... cmd) {
         var lines = new ArrayList<String>();
         Consumer<InputStream> toStringBuilder = is -> toConsumer(is, UnaryOperator.identity(), lines::add);
         Command.cmd(cmd).in(toStringBuilder).err(toStringBuilder).run();
-        if (!silently) {
+        if (!isSilentMode) {
             Cf.outLogger.accept(Arrays.asList(cmd).stream().collect(Collectors.joining(" ", ">", "")));
             Cf.outLogger.accept(toString(lines));
             Cf.outLogger.accept(CRLF);
