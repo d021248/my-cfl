@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Cf {
+public class Cf extends Shell {
 
     private static final Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
     private static final Pattern APPS_PATTERN = Pattern.compile(
@@ -20,9 +20,19 @@ public class Cf {
 
     private Cf() {}
 
+    private Cf(String... cmd) {
+        super(cmd);
+        this.outConsumer(Cf.outLogger);
+        this.errConsumer(Cf.errLogger);
+    }
+
+    public static Cf cmd(String... cmd) {
+        return new Cf(cmd);
+    }
+
     public static Target getTarget() {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "target").outConsumer(lines::add).errConsumer(outLogger).run();
+        Cf.cmd("cf", "target").outConsumer(lines::add).run();
         var attrList = lines
             .stream()
             .map(TARGET_PATTERN::matcher)
@@ -34,7 +44,7 @@ public class Cf {
 
     public static List<App> getApps() {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").outConsumer(lines::add).errConsumer(outLogger).run();
+        Cf.cmd("cf", "apps").outConsumer(lines::add).run();
         return lines
             .stream()
             .map(APPS_PATTERN::matcher)
@@ -56,7 +66,7 @@ public class Cf {
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "env", app).outConsumer(lines::add).errConsumer(outLogger).run();
+        Cf.cmd("cf", "env", app).outConsumer(lines::add).run();
         var envJson = lines
             .stream()
             .dropWhile(line -> !line.equals("{"))
@@ -73,9 +83,9 @@ public class Cf {
     }
 
     public static void logs(String appName) {
-        var command = Shell.cmd("cf", "logs", appName).outConsumer(outLogger).errConsumer(outLogger);
-        Command.activeList().stream().filter(c -> c.cmd().equals(command.cmd())).forEach(Command::stop);
-        new Thread(Shell.cmd("cf", "logs", appName).outConsumer(outLogger).errConsumer(outLogger)).start();
+        var logAppCommand = Shell.cmd("cf", "logs", appName).outConsumer(outLogger);
+        Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
+        new Thread(logAppCommand).start();
     }
 
     public static void setOutLogger(Consumer<String> logger) {

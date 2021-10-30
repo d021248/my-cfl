@@ -169,6 +169,7 @@ public class CfLoggerUI {
             return s;
         };
 
+        var that = this;
         filterValueTextField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent keyEvent) {
@@ -178,13 +179,15 @@ public class CfLoggerUI {
                 }
             }
 
+            @Override
             public void keyPressed(KeyEvent keyEvent) {
                 String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
                 if (filterValue.startsWith(">")) {
                     if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                         String command = filterValue.substring(1).trim();
-                        Shell.cmd(command.split(" ")).run();
+                        Shell.cmd(command.split(" ")).outConsumer(that::log).run();
                         setHighlight.apply("", false);
+                        filterValueTextField.setText("");
                     }
                 }
             }

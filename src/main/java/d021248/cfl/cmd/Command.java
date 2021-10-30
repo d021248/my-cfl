@@ -92,7 +92,7 @@ public class Command implements Runnable {
     }
 
     protected int run(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }
