@@ -6,8 +6,9 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -45,6 +46,7 @@ public class CfLoggerUI {
     private static final String BT_FILTER_ON = "filter on";
     private static final String BT_FILTER_OFF = "filter off";
     private static final String BT_SAVE = "save";
+    private static final String CRLF = System.getProperty("line.separator", "\n");
 
     private static final String SAVE_FILEPATH = "./tmp.txt";
 
@@ -65,7 +67,8 @@ public class CfLoggerUI {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {}
+        } catch (Exception ex) {
+        }
 
         var frame = new JFrame(TITLE);
 
@@ -75,7 +78,8 @@ public class CfLoggerUI {
         BufferedImage image = null;
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         // ------------------------------------------------------------------
         // add the TextArea
@@ -136,17 +140,15 @@ public class CfLoggerUI {
         buttonPanel.add(clearButton);
 
         var toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
-        toggleScrollButton.addActionListener(
-            e -> {
-                if (textArea.isScrollingOn()) {
-                    toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                    textArea.setScrollingOn(false);
-                } else {
-                    toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                    textArea.setScrollingOn(true);
-                }
+        toggleScrollButton.addActionListener(e -> {
+            if (textArea.isScrollingOn()) {
+                toggleScrollButton.setText(BT_START_AUTO_SCROLL);
+                textArea.setScrollingOn(false);
+            } else {
+                toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
+                textArea.setScrollingOn(true);
             }
-        );
+        });
         buttonPanel.add(toggleScrollButton);
 
         // ------------------------------------------------------------------
@@ -164,9 +166,41 @@ public class CfLoggerUI {
         var filterValueTextField = new JTextField("", 20);
         var toggleFilterButton = new JButton(BT_FILTER_ON);
         BiFunction<String, Boolean, String> setHighlight = (s, b) -> {
-            return null;
+            return s;
         };
 
+        filterValueTextField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent keyEvent) {
+                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                if (!filterValue.startsWith(">")) {
+                    setHighlight.apply(filterValue, false);
+                }
+            }
+
+            public void keyPressed(KeyEvent keyEvent) {
+                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                if (filterValue.startsWith(">")) {
+                    if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                        String command = filterValue.substring(1).trim();
+                        Shell.cmd(command.split(" ")).run();
+                        setHighlight.apply("", false);
+                    }
+                }
+            }
+
+            public String getPrintableChar(char c) {
+                return isPrintableChar(c) ? "" + c : "";
+            }
+
+            public boolean isPrintableChar(char c) {
+                Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+                return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
+                        && block != Character.UnicodeBlock.SPECIALS);
+            }
+        });
+
+        toggleFilterButton.setEnabled(false);
         var filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
         filterValueTextPanel.add(toggleFilterButton, BorderLayout.WEST);
@@ -221,12 +255,8 @@ public class CfLoggerUI {
 
     private void save() {
         try {
-            var path = Files.write(
-                Paths.get(SAVE_FILEPATH),
-                textArea.getText().getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING
-            );
+            var path = Files.write(Paths.get(SAVE_FILEPATH), textArea.getText().getBytes(), StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
             var desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();
@@ -235,7 +265,7 @@ public class CfLoggerUI {
         }
     }
 
-    public void log(String s) {
+    public synchronized void log(String s) {
         textArea.append(s);
     }
 }

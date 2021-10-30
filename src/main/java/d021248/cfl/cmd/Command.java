@@ -12,22 +12,22 @@ import java.util.stream.Collectors;
 
 public class Command implements Runnable {
 
-    private static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
+    protected static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
 
     private Process process = null;
     private Thread tin = null;
     private Thread tout = null;
     private Thread terr = null;
     private final String[] cmd;
-    private final String command;
+    private final String commandString;
 
-    private Consumer<InputStream> in = null;
-    private Consumer<OutputStream> out = null;
-    private Consumer<InputStream> err = null;
+    protected Consumer<InputStream> in = null;
+    protected Consumer<OutputStream> out = null;
+    protected Consumer<InputStream> err = null;
 
-    private Command(String... cmd) {
+    protected Command(String... cmd) {
         this.cmd = cmd;
-        this.command = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
+        this.commandString = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
     }
 
     public static Command cmd(String... cmd) {
@@ -60,7 +60,7 @@ public class Command implements Runnable {
             return;
         }
 
-        System.out.println("stopping: " + command);
+        System.out.println("stopping: " + commandString);
 
         if (process != null) {
             process.destroy();
@@ -82,15 +82,17 @@ public class Command implements Runnable {
     }
 
     public void run() {
-        System.out.println("starting: " + command);
+        System.out.println("starting: " + commandString);
 
         try {
             run(in, out, err);
-        } catch (IOException | InterruptedException e) {}
+        } catch (IOException | InterruptedException e) {
+            System.err.println(e);
+        }
     }
 
     protected int run(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-        throws IOException, InterruptedException {
+            throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }
@@ -119,12 +121,12 @@ public class Command implements Runnable {
     }
 
     public String cmd() {
-        return command;
+        return commandString;
     }
 
     @Override
     public String toString() {
-        return String.format("%s(\"%s\")", this.getClass().getSimpleName(), cmd());
+        return String.format("%s(\"%s\")", this.getClass().getSimpleName(), commandString);
     }
 
     public static List<Command> activeList() {

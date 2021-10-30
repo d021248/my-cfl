@@ -1,14 +1,8 @@
 package d021248.cfl.cmd;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -26,38 +20,22 @@ public class Cf {
 
     private Cf() {}
 
-    public static List<String> cli(String... cmd) {
-        return cli(true, cmd);
-    }
-
-    public static List<String> cli(boolean isSilentMode, String... cmd) {
-        var lines = new ArrayList<String>();
-        Consumer<InputStream> toStringBuilder = is -> toConsumer(is, UnaryOperator.identity(), lines::add);
-        Command.cmd(cmd).in(toStringBuilder).err(toStringBuilder).run();
-        if (!isSilentMode) {
-            Cf.outLogger.accept(Arrays.asList(cmd).stream().collect(Collectors.joining(" ", ">", "")));
-            Cf.outLogger.accept(toString(lines));
-            Cf.outLogger.accept(CRLF);
-        }
-        return lines;
-    }
-
     public static Target getTarget() {
-        var attrList = new ArrayList<String>();
-        Cf
-            .cli("cf", "target")
+        var lines = new ArrayList<String>();
+        Shell.cmd("cf", "target").outConsumer(lines::add).errConsumer(outLogger).run();
+        var attrList = lines
             .stream()
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(matcher -> matcher.group(1))
-            .forEach(attrList::add);
+            .collect(Collectors.toList());
         return new Target(attrList.get(0), attrList.get(1), attrList.get(2), attrList.get(3), attrList.get(4));
     }
 
     public static List<App> getApps() {
-        var appList = new ArrayList<App>();
-        Cf
-            .cli("cf", "apps")
+        var lines = new ArrayList<String>();
+        Shell.cmd("cf", "apps").outConsumer(lines::add).errConsumer(outLogger).run();
+        return lines
             .stream()
             .map(APPS_PATTERN::matcher)
             .filter(Matcher::matches)
@@ -72,14 +50,14 @@ public class Cf {
                         matcher.group(6)
                     )
             )
-            .forEach(appList::add);
-        return appList;
+            .collect(Collectors.toList());
     }
 
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
-        var envJson = Cf
-            .cli("cf", "env", app)
+        var lines = new ArrayList<String>();
+        Shell.cmd("cf", "env", app).outConsumer(lines::add).errConsumer(outLogger).run();
+        var envJson = lines
             .stream()
             .dropWhile(line -> !line.equals("{"))
             .takeWhile(line -> !line.equals("}"))
@@ -95,38 +73,16 @@ public class Cf {
     }
 
     public static void logs(String appName) {
-        var cmd = String.format("cf logs %s", appName);
-        UnaryOperator<String> formatter = s -> s.isEmpty() ? s : String.format("%s %s", appName, s.trim());
-        Consumer<InputStream> toOutputlogger = is -> toConsumer(is, formatter, Cf.outLogger);
-        Command.activeList().stream().filter(c -> c.cmd().equals(cmd)).forEach(Command::stop);
-        new Thread(Command.cmd("cf", "logs", appName).in(toOutputlogger).err(toOutputlogger)).start();
-    }
-
-    private static void toConsumer(InputStream is, UnaryOperator<String> formatter, Consumer<String> consumer) {
-        try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader.lines().map(formatter).forEach(consumer::accept);
-        } catch (IOException e) {
-            Cf.errLogger.accept(String.format("Error: %s", e.getMessage()));
-        }
-    }
-
-    private static String toString(List<String> lines) {
-        return lines.stream().collect(Collectors.joining(CRLF));
+        var command = Shell.cmd("cf", "logs", appName).outConsumer(outLogger).errConsumer(outLogger);
+        Command.activeList().stream().filter(c -> c.cmd().equals(command.cmd())).forEach(Command::stop);
+        new Thread(Shell.cmd("cf", "logs", appName).outConsumer(outLogger).errConsumer(outLogger)).start();
     }
 
     public static void setOutLogger(Consumer<String> logger) {
         Cf.outLogger = logger;
     }
 
-    public static Consumer<String> getOutLogger() {
-        return Cf.outLogger;
-    }
-
     public static void setErrLogger(Consumer<String> logger) {
         Cf.errLogger = logger;
-    }
-
-    public static Consumer<String> getErrLogger() {
-        return Cf.errLogger;
     }
 }

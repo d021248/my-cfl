@@ -1,35 +1,16 @@
 package d021248.cfl;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import javax.swing.JTextArea;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Highlighter;
-import javax.swing.text.Utilities;
 
 class CfTextArea extends JTextArea implements AdjustmentListener {
 
@@ -103,6 +84,11 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         repaint();
     }
 
+    public void clear() {
+        linesBuffer.clear();
+        setText("");
+    }
+
     private final DefaultHighlightPainter defaultHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
         null
     );
@@ -110,10 +96,6 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
         repaint();
-    }
-
-    public Object clear() {
-        return null;
     }
 
     public boolean isScrollingOn() {

@@ -18,7 +18,7 @@ public class TestCf {
         System.out.println(target);
         System.out.println("----------------------------------------------------------------------------------------");
 
-        new Thread(() -> Cf.cli("cf", "restage", "mkv-srv")).start();
+        new Thread(Shell.cmd("cf", "restage", "mkv-srv")).start();
         System.out.println("----------------------------------------------------------------------------------------");
 
         Cf.getApps().stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
