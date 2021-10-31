@@ -1,6 +1,6 @@
 package d021248.cfl.cmd;
 
-class App {
+public class App {
 
     public final String name;
     public final String state;

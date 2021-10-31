@@ -12,6 +12,10 @@ public class TestCommand {
     public static void main(String[] args) throws IOException, InterruptedException {
         Shell.cmd("cmd").run();
 
+        Cf.getApps();
+
+        Shell.cmd("cf", "apps").run();
+
         System.out.println();
         Command
             .cmd("cf env mkv-srv")

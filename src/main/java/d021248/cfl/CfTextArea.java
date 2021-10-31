@@ -74,7 +74,7 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
 
     @Override
     public void append(String text) {
-        if (text == null || text.isEmpty()) {
+        if (text == null || text.isBlank()) {
             return;
         }
 

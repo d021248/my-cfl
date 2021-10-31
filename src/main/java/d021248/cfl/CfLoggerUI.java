@@ -112,8 +112,7 @@ public class CfLoggerUI {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> Cf.getApps());
-
+        cfAppsButton.addActionListener(e -> new Thread(Cf.cmd("cf", "apps")).start());
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
@@ -277,7 +276,8 @@ public class CfLoggerUI {
         }
     }
 
-    public synchronized void log(String s) {
+    public void log(String s) {
+        System.err.println(s);
         textArea.append(s);
     }
 }
