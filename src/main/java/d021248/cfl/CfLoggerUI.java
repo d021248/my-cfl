@@ -168,6 +168,7 @@ public class CfLoggerUI {
             return s;
         };
 
+        var stdin = System.in;
         var that = this;
         filterValueTextField.addKeyListener(
             new KeyAdapter() {
@@ -185,7 +186,7 @@ public class CfLoggerUI {
                     if (filterValue.startsWith(">")) {
                         if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                             String command = filterValue.substring(1).trim();
-                            new Thread(Shell.cmd(command.split(" ")).inConsumer(that::log)).start();
+                            new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(that::log)).start();
                             setHighlight.apply("", false);
                             filterValueTextField.setText("");
                         }

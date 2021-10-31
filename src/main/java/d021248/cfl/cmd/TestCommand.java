@@ -10,26 +10,33 @@ import java.util.function.Predicate;
 public class TestCommand {
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        Shell.cmd("cmd").run();
+
         System.out.println();
         Command
             .cmd("cf env mkv-srv")
-            .in(TestCommand::handlerIn)
-            .out(TestCommand::handlerOut)
-            .err(TestCommand::handlerErr)
+            .stdinHandler(TestCommand::stdinHandler)
+            .stdoutHandler(TestCommand::stdoutHandler)
+            .stderrHandler(TestCommand::stderrHandler)
             .run();
 
         System.out.println();
 
         System.out.println();
-        Command.cmd("cmd").in(TestCommand::handlerIn).out(TestCommand::handlerOut).err(TestCommand::handlerErr).run();
+        Command
+            .cmd("cmd")
+            .stdinHandler(TestCommand::stdinHandler)
+            .stdoutHandler(TestCommand::stdoutHandler)
+            .stderrHandler(TestCommand::stderrHandler)
+            .run();
         System.out.println();
 
         System.out.println();
         Command
             .cmd("notepad")
-            .in(TestCommand::handlerIn)
-            .out(TestCommand::handlerOut)
-            .err(TestCommand::handlerErr)
+            .stdinHandler(TestCommand::stdinHandler)
+            .stdoutHandler(TestCommand::stdoutHandler)
+            .stderrHandler(TestCommand::stderrHandler)
             .run();
         System.out.println();
 
@@ -40,7 +47,7 @@ public class TestCommand {
         System.out.println("done");
     }
 
-    private static void handlerOut(OutputStream os) {
+    private static void stdinHandler(OutputStream os) {
         System.out.println("starting handlerOut()");
         int c;
         try {
@@ -51,7 +58,7 @@ public class TestCommand {
         } catch (IOException e) {}
     }
 
-    private static void handlerErr(InputStream is) {
+    private static void stderrHandler(InputStream is) {
         System.out.println("starting handlerErr()");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader
@@ -64,7 +71,7 @@ public class TestCommand {
         }
     }
 
-    private static void handlerIn(InputStream is) {
+    private static void stdoutHandler(InputStream is) {
         System.out.println("starting handlerIn()");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader

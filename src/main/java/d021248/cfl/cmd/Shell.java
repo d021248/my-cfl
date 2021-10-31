@@ -4,13 +4,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Shell extends Command {
 
-    private Consumer<String> inConsumer = System.out::println;
-    private Consumer<String> errConsumer = System.err::println;
+    private Consumer<String> stdoutConsumer = null;
+    private Consumer<String> stderrConsumer = null;
+    private InputStream stdin = null;
 
     public Shell(String... cmd) {
         super(cmd);
@@ -20,26 +22,35 @@ public class Shell extends Command {
         return new Shell(cmd);
     }
 
-    public Shell inConsumer(Consumer<String> inConsumer) {
-        this.inConsumer = inConsumer;
+    public Shell stdin(InputStream stdin) {
+        this.stdin = stdin;
         return this;
     }
 
-    public Shell errConsumer(Consumer<String> errConsumer) {
-        this.errConsumer = errConsumer;
+    public Shell stdoutConsumer(Consumer<String> stdoutConsumer) {
+        this.stdoutConsumer = stdoutConsumer;
+        return this;
+    }
+
+    public Shell stderrConsumer(Consumer<String> stderrConsumer) {
+        this.stderrConsumer = stderrConsumer;
         return this;
     }
 
     @Override
     public void run() {
-        Consumer<InputStream> toOutConsumer = (this.inConsumer == null)
-            ? this.in
-            : is -> toConsumer(is, this.inConsumer);
-        Consumer<InputStream> toErrConsumer = (this.errConsumer == null)
-            ? this.err
-            : is -> toConsumer(is, this.errConsumer);
-        this.in(toOutConsumer);
-        this.err(toErrConsumer);
+        this.stdin = Optional.ofNullable(this.stdin).orElse(System.in);
+        Consumer<OutputStream> toStdinConsumer = os -> this.transferTo(this.stdin, os);
+        this.stdinHandler(toStdinConsumer);
+
+        this.stdoutConsumer = Optional.ofNullable(this.stdoutConsumer).orElse(System.out::println);
+        Consumer<InputStream> toStdoutConsumer = is -> toConsumer(is, this.stdoutConsumer);
+        this.stdoutHandler(toStdoutConsumer);
+
+        this.stderrConsumer = Optional.ofNullable(this.stderrConsumer).orElse(System.err::println);
+        Consumer<InputStream> toStderrConsumer = is -> toConsumer(is, this.stderrConsumer);
+        this.stderrHandler(toStderrConsumer);
+
         super.run();
     }
 
@@ -48,9 +59,27 @@ public class Shell extends Command {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (IOException e) {
             Optional
-                .ofNullable(this.errConsumer)
+                .ofNullable(this.stderrConsumer)
                 .orElse(System.err::println)
                 .accept(String.format("Error: %s", e.getMessage()));
         }
+    }
+
+    private void transferTo(InputStream is, OutputStream os) {
+        System.out.println("starting handlerOut()");
+        int c;
+        try {
+            while ((c = is.read()) > -1) {
+                System.out.print(c);
+                os.write(c);
+                os.flush();
+            }
+        } catch (IOException e) {
+            Optional
+                .ofNullable(this.stderrConsumer)
+                .orElse(System.err::println)
+                .accept(String.format("Error: %s", e.getMessage()));
+        }
+        System.out.println("leaving handlerOut()");
     }
 }

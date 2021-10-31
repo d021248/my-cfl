@@ -22,8 +22,8 @@ public class Cf extends Shell {
 
     private Cf(String... cmd) {
         super(cmd);
-        this.inConsumer(Cf.outLogger);
-        this.errConsumer(Cf.errLogger);
+        this.stdoutConsumer(Cf.outLogger);
+        this.stderrConsumer(Cf.errLogger);
     }
 
     public static Cf cmd(String... cmd) {
@@ -32,7 +32,7 @@ public class Cf extends Shell {
 
     public static Target getTarget() {
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "target").inConsumer(lines::add).run();
+        Cf.cmd("cf", "target").stdoutConsumer(lines::add).run();
         var attrList = lines
             .stream()
             .map(TARGET_PATTERN::matcher)
@@ -44,7 +44,7 @@ public class Cf extends Shell {
 
     public static List<App> getApps() {
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "apps").inConsumer(lines::add).run();
+        Cf.cmd("cf", "apps").stdoutConsumer(lines::add).run();
         return lines
             .stream()
             .map(APPS_PATTERN::matcher)
@@ -66,7 +66,7 @@ public class Cf extends Shell {
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "env", app).inConsumer(lines::add).run();
+        Cf.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
         var envJson = lines
             .stream()
             .dropWhile(line -> !line.equals("{"))
@@ -85,7 +85,7 @@ public class Cf extends Shell {
     public static void logs(String appName) {
         Consumer<String> outConsumer = line ->
             Cf.outLogger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line.trim()));
-        var logAppCommand = Shell.cmd("cf", "logs", appName).inConsumer(outConsumer);
+        var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer);
         Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
     }

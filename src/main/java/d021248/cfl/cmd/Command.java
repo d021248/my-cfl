@@ -21,9 +21,9 @@ public class Command implements Runnable {
     private final String[] cmd;
     private final String commandString;
 
-    protected Consumer<InputStream> in = null;
-    protected Consumer<OutputStream> out = null;
-    protected Consumer<InputStream> err = null;
+    protected Consumer<OutputStream> stdinHandler = null;
+    protected Consumer<InputStream> stdoutHandler = null;
+    protected Consumer<InputStream> stderrHandler = null;
 
     protected Command(String... cmd) {
         this.cmd = cmd;
@@ -34,18 +34,18 @@ public class Command implements Runnable {
         return new Command(cmd);
     }
 
-    public Command in(Consumer<InputStream> in) {
-        this.in = in;
+    public Command stdinHandler(Consumer<OutputStream> stdinHandler) {
+        this.stdinHandler = stdinHandler;
         return this;
     }
 
-    public Command out(Consumer<OutputStream> out) {
-        this.out = out;
+    public Command stdoutHandler(Consumer<InputStream> stdoutHandler) {
+        this.stdoutHandler = stdoutHandler;
         return this;
     }
 
-    public Command err(Consumer<InputStream> err) {
-        this.err = err;
+    public Command stderrHandler(Consumer<InputStream> stderrHandler) {
+        this.stderrHandler = stderrHandler;
         return this;
     }
 
@@ -85,14 +85,18 @@ public class Command implements Runnable {
         System.out.println("starting: " + commandString);
 
         try {
-            run(in, out, err);
+            run(stdinHandler, stdoutHandler, stderrHandler);
         } catch (IOException | InterruptedException e) {
             System.err.println(e);
+            stop();
         }
     }
 
-    protected int run(Consumer<InputStream> in, Consumer<OutputStream> out, Consumer<InputStream> err)
-        throws IOException, InterruptedException {
+    protected int run(
+        Consumer<OutputStream> stdinHandler,
+        Consumer<InputStream> stdoutHandler,
+        Consumer<InputStream> stderrHandler
+    ) throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }
@@ -100,18 +104,18 @@ public class Command implements Runnable {
         activeList.add(this);
         process = new ProcessBuilder().command(cmd).start();
 
-        if (in != null) {
-            tin = new Thread(() -> in.accept(process.getInputStream()));
-            tin.start();
-        }
-
-        if (out != null) {
-            tout = new Thread(() -> out.accept(process.getOutputStream()));
+        if (stdinHandler != null) {
+            tout = new Thread(() -> stdinHandler.accept(process.getOutputStream()));
             tout.start();
         }
 
-        if (err != null) {
-            terr = new Thread(() -> err.accept(process.getErrorStream()));
+        if (stdoutHandler != null) {
+            tin = new Thread(() -> stdoutHandler.accept(process.getInputStream()));
+            tin.start();
+        }
+
+        if (stderrHandler != null) {
+            terr = new Thread(() -> stderrHandler.accept(process.getErrorStream()));
             terr.start();
         }
 
