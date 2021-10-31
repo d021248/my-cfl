@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 public class Shell extends Command {
 
-    private Consumer<String> outConsumer = System.out::println;
+    private Consumer<String> inConsumer = System.out::println;
     private Consumer<String> errConsumer = System.err::println;
 
     public Shell(String... cmd) {
@@ -20,8 +20,8 @@ public class Shell extends Command {
         return new Shell(cmd);
     }
 
-    public Shell outConsumer(Consumer<String> outConsumer) {
-        this.outConsumer = outConsumer;
+    public Shell inConsumer(Consumer<String> inConsumer) {
+        this.inConsumer = inConsumer;
         return this;
     }
 
@@ -32,9 +32,9 @@ public class Shell extends Command {
 
     @Override
     public void run() {
-        Consumer<InputStream> toOutConsumer = (this.outConsumer == null)
+        Consumer<InputStream> toOutConsumer = (this.inConsumer == null)
             ? this.in
-            : is -> toConsumer(is, this.outConsumer);
+            : is -> toConsumer(is, this.inConsumer);
         Consumer<InputStream> toErrConsumer = (this.errConsumer == null)
             ? this.err
             : is -> toConsumer(is, this.errConsumer);

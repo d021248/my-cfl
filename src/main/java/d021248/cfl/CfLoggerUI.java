@@ -185,7 +185,7 @@ public class CfLoggerUI {
                     if (filterValue.startsWith(">")) {
                         if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                             String command = filterValue.substring(1).trim();
-                            new Thread(Shell.cmd(command.split(" ")).outConsumer(that::log)).start();
+                            new Thread(Shell.cmd(command.split(" ")).inConsumer(that::log)).start();
                             setHighlight.apply("", false);
                             filterValueTextField.setText("");
                         }
