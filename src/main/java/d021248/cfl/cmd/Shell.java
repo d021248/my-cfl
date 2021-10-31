@@ -66,11 +66,9 @@ public class Shell extends Command {
     }
 
     private void transferTo(InputStream is, OutputStream os) {
-        System.out.println("starting handlerOut()");
         int c;
         try {
             while ((c = is.read()) > -1) {
-                System.out.print(c);
                 os.write(c);
                 os.flush();
             }
@@ -80,6 +78,5 @@ public class Shell extends Command {
                 .orElse(System.err::println)
                 .accept(String.format("Error: %s", e.getMessage()));
         }
-        System.out.println("leaving handlerOut()");
     }
 }

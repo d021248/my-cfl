@@ -168,7 +168,6 @@ public class CfLoggerUI {
             return s;
         };
 
-        var stdin = System.in;
         var that = this;
         filterValueTextField.addKeyListener(
             new KeyAdapter() {
