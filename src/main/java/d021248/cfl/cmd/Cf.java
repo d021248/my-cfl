@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Cf extends Shell {
+public class Cf {
 
     private static final Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
     private static final Pattern APPS_PATTERN = Pattern.compile(
@@ -15,24 +15,14 @@ public class Cf extends Shell {
     );
     private static final String CF = System.getProperty("CFL", "cf");
     private static final String CRLF = System.getProperty("line.separator", "\n");
-    private static Consumer<String> outLogger = System.out::println;
+    private static Consumer<String> outLogger2 = System.out::println;
     private static Consumer<String> errLogger = System.err::println;
 
     private Cf() {}
 
-    private Cf(String... cmd) {
-        super(cmd);
-        this.stdoutConsumer(Cf.outLogger);
-        this.stderrConsumer(Cf.errLogger);
-    }
-
-    public static Cf cmd(String... cmd) {
-        return new Cf(cmd);
-    }
-
     public static Target getTarget() {
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "target").stdoutConsumer(lines::add).run();
+        Shell.cmd("cf", "target").stdoutConsumer(lines::add).run();
         var attrList = lines
             .stream()
             .map(TARGET_PATTERN::matcher)
@@ -44,7 +34,7 @@ public class Cf extends Shell {
 
     public static List<App> getApps() {
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "apps").stdoutConsumer(lines::add).run();
+        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
         return lines
             .stream()
             .map(APPS_PATTERN::matcher)
@@ -66,7 +56,7 @@ public class Cf extends Shell {
     public static String getEnv(String app) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Cf.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
+        Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
         var envJson = lines
             .stream()
             .dropWhile(line -> !line.equals("{"))
@@ -78,23 +68,15 @@ public class Cf extends Shell {
         return envJson;
     }
 
-    public static void logs() {
-        Cf.getApps().stream().forEach(app -> Cf.logs(app.name));
+    public static void logs(Consumer<String> logger) {
+        Cf.getApps().stream().forEach(app -> Cf.logs(app.name, logger));
     }
 
-    public static void logs(String appName) {
+    public static void logs(String appName, Consumer<String> logger) {
         Consumer<String> outConsumer = line ->
-            Cf.outLogger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line.trim()));
+            logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line.trim()));
         var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer);
         Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
-    }
-
-    public static void setOutLogger(Consumer<String> logger) {
-        Cf.outLogger = logger;
-    }
-
-    public static void setErrLogger(Consumer<String> logger) {
-        Cf.errLogger = logger;
     }
 }

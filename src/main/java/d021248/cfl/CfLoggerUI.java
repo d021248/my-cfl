@@ -64,9 +64,6 @@ public class CfLoggerUI implements Runnable {
     }
 
     private void initialize() {
-        Cf.setErrLogger(this::log);
-        Cf.setOutLogger(this::log);
-
         // ------------------------------------------------------------------
         // set Look & Feel
         // ------------------------------------------------------------------
@@ -102,11 +99,11 @@ public class CfLoggerUI implements Runnable {
         // we need this to set the name of the SPACE in the title!!
         Consumer<Target> targetToLogger = target -> {
             frame.setTitle(TITLE.replace("cfLogger", target.space));
-            log(String.format("endpoint : %s", target.endpoint));
-            log(String.format("version  : %s", target.version));
-            log(String.format("user     : %s", target.user));
-            log(String.format("org      : %s", target.org));
-            log(String.format("space    : %s", target.space));
+            logger(String.format("endpoint : %s", target.endpoint));
+            logger(String.format("version  : %s", target.version));
+            logger(String.format("user     : %s", target.user));
+            logger(String.format("org      : %s", target.org));
+            logger(String.format("space    : %s", target.space));
         };
 
         // this is the action listener for button 'cf target'
@@ -119,11 +116,11 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> new Thread(Cf.cmd("cf", "apps")).start());
+        cfAppsButton.addActionListener(e -> new Thread(Shell.cmd("cf", "apps")).start());
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
-        cfLogsButton.addActionListener(e -> new Thread(Cf::logs).start());
+        cfLogsButton.addActionListener(e -> new Thread(() -> Cf.logs(this::logger)).start());
         buttonPanel.add(cfLogsButton);
 
         // ------------------------------------------------------------------
@@ -191,7 +188,7 @@ public class CfLoggerUI implements Runnable {
                     if (filterValue.startsWith(">")) {
                         if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                             String command = filterValue.substring(1).trim();
-                            new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(that::log)).start();
+                            new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(that::logger)).start();
                             setHighlight.apply("", false);
                             filterValueTextField.setText("");
                         }
@@ -283,7 +280,7 @@ public class CfLoggerUI implements Runnable {
         }
     }
 
-    public void log(String s) {
+    public void logger(String s) {
         System.err.println(s);
         textArea.append(s);
     }

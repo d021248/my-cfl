@@ -60,7 +60,7 @@ public class Command implements Runnable {
             return;
         }
 
-        System.out.println("stopping: " + commandString);
+        System.out.println("stopping: " + this);
 
         if (process != null) {
             process.destroy();
@@ -82,7 +82,7 @@ public class Command implements Runnable {
     }
 
     public void run() {
-        System.out.println("starting: " + commandString);
+        System.out.println("starting: " + this);
 
         try {
             run(stdinHandler, stdoutHandler, stderrHandler);
