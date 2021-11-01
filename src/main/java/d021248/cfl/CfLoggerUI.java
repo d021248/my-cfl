@@ -30,7 +30,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-public class CfLoggerUI {
+public class CfLoggerUI implements Runnable {
 
     private static final String TITLE = ".-=:#[ cfLogger ]#:=-.";
     private static final String LOGO = "D021248.jpg";
@@ -49,18 +49,24 @@ public class CfLoggerUI {
 
     private static final String SAVE_FILEPATH = "./tmp.txt";
 
-    private CfTextArea textArea = new CfTextArea();
+    private CfTextArea textArea;
 
-    public CfLoggerUI() {
-        Cf.setErrLogger(this::log);
-        Cf.setOutLogger(this::log);
+    public static CfLoggerUI getNewInstance() {
+        var cfLoggerUI = new CfLoggerUI();
+        SwingUtilities.invokeLater(cfLoggerUI);
+        return cfLoggerUI;
     }
 
+    private CfLoggerUI() {}
+
     public void run() {
-        SwingUtilities.invokeLater(this::initialize);
+        initialize();
     }
 
     private void initialize() {
+        Cf.setErrLogger(this::log);
+        Cf.setOutLogger(this::log);
+
         // ------------------------------------------------------------------
         // set Look & Feel
         // ------------------------------------------------------------------
@@ -81,6 +87,7 @@ public class CfLoggerUI {
         // ------------------------------------------------------------------
         // add the TextArea
         // ------------------------------------------------------------------
+        textArea = new CfTextArea();
         var textAreaScrollPane = new JScrollPane(textArea);
         textAreaScrollPane.setBorder(BorderFactory.createEtchedBorder());
         textAreaScrollPane.getHorizontalScrollBar().addAdjustmentListener(textArea);
