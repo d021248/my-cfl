@@ -3,17 +3,17 @@ package d021248.cfl.cmd;
 public class TestCf {
 
     public static void main(String[] args) throws InterruptedException {
-        Cf.logs();
+        Cf.logs(System.out::println);
         System.out.println("----------------------------------------------------------------------------------------");
 
-        var env = Cf.getEnv("mkv-srv");
+        var env = Cf.env("mkv-srv");
         System.out.println("----------------------------------------------------------------------------------------");
         System.out.println(env);
         System.out.println("----------------------------------------------------------------------------------------");
 
         // System.exit(0);
 
-        var target = Cf.getTarget();
+        var target = Cf.target();
         System.out.println("----------------------------------------------------------------------------------------");
         System.out.println(target);
         System.out.println("----------------------------------------------------------------------------------------");
@@ -21,10 +21,10 @@ public class TestCf {
         new Thread(Shell.cmd("cf", "restage", "mkv-srv")).start();
         System.out.println("----------------------------------------------------------------------------------------");
 
-        Cf.getApps().stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
+        Cf.apps().stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
         System.out.println("----------------------------------------------------------------------------------------");
 
-        Cf.logs();
+        Cf.logs(System.out::println);
         System.out.println("----------------------------------------------------------------------------------------");
 
         Thread.sleep(20_000);

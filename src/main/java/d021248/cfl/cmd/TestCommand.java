@@ -12,7 +12,7 @@ public class TestCommand {
     public static void main(String[] args) throws IOException, InterruptedException {
         Shell.cmd("cmd").run();
 
-        Cf.getApps();
+        Cf.apps();
 
         Shell.cmd("cf", "apps").run();
 

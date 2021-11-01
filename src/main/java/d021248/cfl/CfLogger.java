@@ -3,9 +3,9 @@ package d021248.cfl;
 public class CfLogger {
 
     public static void main(String[] args) {
-        var cfLoggerUI = CfLoggerUI.getNewInstance();
+        CfLoggerUI.startNewInstance();
 
-        CfLoggerUI.getNewInstance();
+        CfLoggerUI.startNewInstance();
 
         System.err.println("done");
     }

@@ -51,7 +51,7 @@ public class CfLoggerUI implements Runnable {
 
     private CfTextArea textArea;
 
-    public static CfLoggerUI getNewInstance() {
+    public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
         SwingUtilities.invokeLater(cfLoggerUI);
         return cfLoggerUI;
@@ -107,7 +107,7 @@ public class CfLoggerUI implements Runnable {
         };
 
         // this is the action listener for button 'cf target'
-        ActionListener cfTargetActionListener = e -> new Thread(() -> targetToLogger.accept(Cf.getTarget())).start();
+        ActionListener cfTargetActionListener = e -> new Thread(() -> targetToLogger.accept(Cf.target())).start();
         cfTargetActionListener.actionPerformed(null); // we execute it here right away to set the name of the SPACE in
         // the title
 
@@ -116,7 +116,7 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> new Thread(Shell.cmd("cf", "apps")).start());
+        cfAppsButton.addActionListener(e -> new Thread(() -> Cf.apps()).start());
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
