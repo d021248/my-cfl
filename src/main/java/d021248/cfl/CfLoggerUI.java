@@ -97,17 +97,11 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         // we need this to set the name of the SPACE in the title!!
-        Consumer<Target> targetToLogger = target -> {
-            frame.setTitle(TITLE.replace("cfLogger", target.space));
-            logger(String.format("endpoint : %s", target.endpoint));
-            logger(String.format("version  : %s", target.version));
-            logger(String.format("user     : %s", target.user));
-            logger(String.format("org      : %s", target.org));
-            logger(String.format("space    : %s", target.space));
-        };
+        Consumer<Target> targetToLogger = target -> frame.setTitle(TITLE.replace("cfLogger", target.space));
 
         // this is the action listener for button 'cf target'
-        ActionListener cfTargetActionListener = e -> new Thread(() -> targetToLogger.accept(Cf.target())).start();
+        ActionListener cfTargetActionListener = e ->
+            new Thread(() -> targetToLogger.accept(Cf.target(this::logger))).start();
         cfTargetActionListener.actionPerformed(null); // we execute it here right away to set the name of the SPACE in
         // the title
 
@@ -116,7 +110,7 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> new Thread(() -> Cf.apps()).start());
+        cfAppsButton.addActionListener(e -> new Thread(() -> Cf.apps(this::logger)).start());
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
