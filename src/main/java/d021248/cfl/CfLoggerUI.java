@@ -57,8 +57,7 @@ public class CfLoggerUI implements Runnable {
         return cfLoggerUI;
     }
 
-    private CfLoggerUI() {
-    }
+    private CfLoggerUI() {}
 
     public void run() {
         initialize();
@@ -70,8 +69,7 @@ public class CfLoggerUI implements Runnable {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-        }
+        } catch (Exception e) {}
 
         var frame = new JFrame(TITLE);
 
@@ -81,8 +79,7 @@ public class CfLoggerUI implements Runnable {
         BufferedImage image = null;
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {
-        }
+        } catch (Exception e) {}
 
         // ------------------------------------------------------------------
         // add the TextArea
@@ -143,15 +140,17 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.add(clearButton);
 
         var toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
-        toggleScrollButton.addActionListener(e -> {
-            if (textArea.isScrollingOn()) {
-                toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                textArea.setScrollingOn(false);
-            } else {
-                toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                textArea.setScrollingOn(true);
+        toggleScrollButton.addActionListener(
+            e -> {
+                if (textArea.isScrollingOn()) {
+                    toggleScrollButton.setText(BT_START_AUTO_SCROLL);
+                    textArea.setScrollingOn(false);
+                } else {
+                    toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
+                    textArea.setScrollingOn(true);
+                }
             }
-        });
+        );
         buttonPanel.add(toggleScrollButton);
 
         // ------------------------------------------------------------------
@@ -172,39 +171,44 @@ public class CfLoggerUI implements Runnable {
             return s;
         };
 
-        var that = this;
-        filterValueTextField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent keyEvent) {
-                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                if (!filterValue.startsWith(">")) {
-                    setHighlight.apply(filterValue, false);
-                }
-            }
-
-            @Override
-            public void keyPressed(KeyEvent keyEvent) {
-                String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
-                if (filterValue.startsWith(">")) {
-                    if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                        String command = filterValue.substring(1).trim();
-                        new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(that::logger)).start();
-                        setHighlight.apply("", false);
-                        filterValueTextField.setText("");
+        filterValueTextField.addKeyListener(
+            new KeyAdapter() {
+                @Override
+                public void keyTyped(KeyEvent keyEvent) {
+                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                    if (!filterValue.startsWith(">")) {
+                        setHighlight.apply(filterValue, false);
                     }
                 }
-            }
 
-            public String getPrintableChar(char c) {
-                return isPrintableChar(c) ? "" + c : "";
-            }
+                @Override
+                public void keyPressed(KeyEvent keyEvent) {
+                    String filterValue = filterValueTextField.getText() + getPrintableChar(keyEvent.getKeyChar());
+                    if (filterValue.startsWith(">")) {
+                        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                            String command = filterValue.substring(1).trim();
+                            new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(CfLoggerUI.this::logger)).start();
+                            setHighlight.apply("", false);
+                            filterValueTextField.setText("");
+                        }
+                    }
+                }
 
-            public boolean isPrintableChar(char c) {
-                Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-                return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
-                        && block != Character.UnicodeBlock.SPECIALS);
+                public String getPrintableChar(char c) {
+                    return isPrintableChar(c) ? "" + c : "";
+                }
+
+                public boolean isPrintableChar(char c) {
+                    Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+                    return (
+                        (!Character.isISOControl(c)) &&
+                        c != KeyEvent.CHAR_UNDEFINED &&
+                        block != null &&
+                        block != Character.UnicodeBlock.SPECIALS
+                    );
+                }
             }
-        });
+        );
 
         toggleFilterButton.setEnabled(false);
         var filterValueTextPanel = new JPanel(new BorderLayout());
@@ -261,8 +265,12 @@ public class CfLoggerUI implements Runnable {
 
     private void save() {
         try {
-            var path = Files.write(Paths.get(SAVE_FILEPATH), textArea.getText().getBytes(), StandardOpenOption.CREATE,
-                    StandardOpenOption.TRUNCATE_EXISTING);
+            var path = Files.write(
+                Paths.get(SAVE_FILEPATH),
+                textArea.getText().getBytes(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            );
             var desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();
