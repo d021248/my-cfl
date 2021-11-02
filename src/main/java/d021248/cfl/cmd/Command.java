@@ -15,9 +15,7 @@ public class Command implements Runnable {
     protected static List<Command> activeList = Collections.synchronizedList(new ArrayList<>());
 
     private Process process = null;
-    private Thread stdinHandlerThreat = null;
-    private Thread stdoutHandlerThreat = null;
-    private Thread stderrHandlerThreat = null;
+
     private final String[] cmd;
     private final String commandString;
 
@@ -60,29 +58,17 @@ public class Command implements Runnable {
             return;
         }
 
-        System.out.println("stopping: " + this);
+        System.err.println("stopping: " + this);
 
         if (process != null) {
             process.destroy();
-        }
-
-        if (stdoutHandlerThreat != null) {
-            stdoutHandlerThreat.stop();
-        }
-
-        if (stderrHandlerThreat != null) {
-            stderrHandlerThreat.stop();
-        }
-
-        if (stdinHandlerThreat != null) {
-            stdinHandlerThreat.stop();
         }
 
         activeList.remove(this);
     }
 
     public void run() {
-        System.out.println("starting: " + this);
+        System.err.println("starting: " + this);
 
         try {
             run(stdinHandler, stdoutHandler, stderrHandler);
@@ -92,8 +78,11 @@ public class Command implements Runnable {
         }
     }
 
-    protected int run(Consumer<OutputStream> stdinHandler, Consumer<InputStream> stdoutHandler,
-            Consumer<InputStream> stderrHandler) throws IOException, InterruptedException {
+    protected int run(
+        Consumer<OutputStream> stdinHandler,
+        Consumer<InputStream> stdoutHandler,
+        Consumer<InputStream> stderrHandler
+    ) throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }
@@ -102,18 +91,15 @@ public class Command implements Runnable {
         process = new ProcessBuilder().command(cmd).start();
 
         if (stdoutHandler != null) {
-            stdoutHandlerThreat = new Thread(() -> stdoutHandler.accept(process.getInputStream()));
-            stdoutHandlerThreat.start();
+            new Thread(() -> stdoutHandler.accept(process.getInputStream())).start();
         }
 
         if (stderrHandler != null) {
-            stderrHandlerThreat = new Thread(() -> stderrHandler.accept(process.getErrorStream()));
-            stderrHandlerThreat.start();
+            new Thread(() -> stderrHandler.accept(process.getErrorStream())).start();
         }
 
         if (stdinHandler != null) {
-            stdinHandlerThreat = new Thread(() -> stdinHandler.accept(process.getOutputStream()));
-            stdinHandlerThreat.start();
+            new Thread(() -> stdinHandler.accept(process.getOutputStream())).start();
         }
 
         var result = process.waitFor();
