@@ -21,12 +21,14 @@ public class Cf {
     public static Target target(Consumer<String> logger) {
         var lines = new ArrayList<String>();
         Shell.cmd("cf", "target").stdoutConsumer(logger.andThen(lines::add)).run();
-        var attrList = lines
+
+        var attrList = new ArrayList<String>();
+        lines
             .stream()
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(matcher -> matcher.group(1))
-            .collect(Collectors.toList());
+            .forEach(attrList::add);
         return new Target(attrList.get(0), attrList.get(1), attrList.get(2), attrList.get(3), attrList.get(4));
     }
 
