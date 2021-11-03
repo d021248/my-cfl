@@ -27,7 +27,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class CfLoggerUI implements Runnable {
@@ -53,7 +52,7 @@ public class CfLoggerUI implements Runnable {
 
     public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
-        SwingUtilities.invokeLater(cfLoggerUI);
+        new Thread(cfLoggerUI).start();
         return cfLoggerUI;
     }
 
