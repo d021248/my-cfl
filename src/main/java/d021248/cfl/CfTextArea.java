@@ -123,6 +123,13 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         setText("");
     }
 
+    private void refresh() {
+        var tmp = new ArrayList<String>(linesBuffer);
+        linesBuffer.clear();
+        setText("");
+        tmp.stream().forEach(this::append);
+    }
+
     private final DefaultHighlightPainter defaultHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
         null
     );
@@ -188,20 +195,19 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         isHighlightOn = true;
         highlightValue = newHighlightValue.trim();
         highlightValueRegexp = String.format(".*%s.*", highlightValue);
-        setText("");
-        new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+        refresh();
     }
 
     public void setFilter(boolean setFilterOn) {
         if (isFilterOn && !setFilterOn) {
             isFilterOn = false;
-            new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+            refresh();
             return;
         }
 
         if (!isFilterOn && setFilterOn && isHighlightOn) {
             isFilterOn = true;
-            new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+            refresh();
             return;
         }
     }
@@ -209,6 +215,6 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     public void clearHighlight() {
         getHighlighter().removeAllHighlights();
         isHighlightOn = false;
-        new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+        refresh();
     }
 }
