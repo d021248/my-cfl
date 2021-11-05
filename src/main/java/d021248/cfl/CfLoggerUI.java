@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -16,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -27,6 +25,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 public class CfLoggerUI implements Runnable {
@@ -95,17 +94,17 @@ public class CfLoggerUI implements Runnable {
         var buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        // we need this to set the name of the SPACE in the title!!
-        Consumer<Target> targetToLogger = target -> frame.setTitle(TITLE.replace("cfLogger", target.space));
-
-        // this is the action listener for button 'cf target'
-        ActionListener cfTargetActionListener = e ->
-            new Thread(() -> targetToLogger.accept(Cf.target(this::logger))).start();
-        cfTargetActionListener.actionPerformed(null); // we execute it here right away to set the name of the SPACE in
-        // the title
-
         var cfTargetButton = new JButton(BT_CF_TARGET);
-        cfTargetButton.addActionListener(cfTargetActionListener);
+        cfTargetButton.addActionListener(
+            e ->
+                new Thread(
+                    () -> {
+                        var target = Cf.target(this::logger);
+                        SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space)));
+                    }
+                )
+                    .start()
+        );
         buttonPanel.add(cfTargetButton);
 
         var cfAppsButton = new JButton(BT_CF_APPS);
