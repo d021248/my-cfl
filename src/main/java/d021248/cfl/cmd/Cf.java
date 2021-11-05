@@ -87,7 +87,9 @@ public class Cf {
 
     public static void logs(String appName, Consumer<String> logger) {
         Consumer<String> outConsumer = line ->
-            logger.accept(line.isEmpty() ? "" : String.format("%s: %s", appName, line.trim()));
+            logger.accept(
+                line.isEmpty() ? "" : (line.startsWith(">") ? line : String.format("%s: %s", appName, line.trim()))
+            );
         var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer);
         Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
