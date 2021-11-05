@@ -30,14 +30,14 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
 
     private final CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
 
-    private final CfTextAreaAdapter adapter;
+    private final CfTextAreaKeyAndMouseAdapter adapter;
 
     public CfTextArea() {
         super();
         setHighlighter(new DefaultHighlighter());
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
-        this.adapter = new CfTextAreaAdapter(this);
+        this.adapter = new CfTextAreaKeyAndMouseAdapter(this);
     }
 
     // ----------------------------------------------------------------------------------------

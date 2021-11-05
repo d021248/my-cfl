@@ -8,19 +8,20 @@ import java.awt.event.MouseWheelEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
 
-class CfTextAreaAdapter {
+class CfTextAreaKeyAndMouseAdapter {
 
     private final CfTextArea textArea;
 
-    CfTextAreaAdapter(CfTextArea textArea) {
+    CfTextAreaKeyAndMouseAdapter(CfTextArea textArea) {
         this.textArea = textArea;
+        init();
     }
 
     private boolean isControlKeyDown = false;
     private boolean isAltKeyDown = false;
     private boolean isScrollingOn = false;
 
-    public void init() {
+    private void init() {
         var keyAdapter = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
