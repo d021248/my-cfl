@@ -60,7 +60,8 @@ class CfTextAreaKeyAndMouseAdapter {
 
                 textArea.setSelectionStart(start < end ? start : end);
                 textArea.setSelectionEnd(start > end ? start : end);
-                // setHighlight.apply(getSelectedText(), true);
+                textArea.setHighlight(textArea.getSelectedText());
+                //setHighlight.apply(getSelectedText(), true);
             }
 
             @Override
@@ -74,7 +75,7 @@ class CfTextAreaKeyAndMouseAdapter {
             public void mousePressed(MouseEvent e) {
                 // setHighlight.apply("", true);
                 isScrollingOn = textArea.isScrollingOn();
-                // toggleScrollButton.setText("start auto-scroll");
+                //toggleScrollButton.setText("start auto-scroll");
                 textArea.setScrolling(false);
                 super.mousePressed(e);
             }
@@ -113,20 +114,20 @@ class CfTextAreaKeyAndMouseAdapter {
                     // ------------------------------------------------------------------
                     // 1. find the selected line
                     // ------------------------------------------------------------------
-                    int rowStart = Utilities.getRowStart(textArea, offset);
-                    int rowEnd = Utilities.getRowEnd(textArea, offset);
-                    int xoffset = offset - rowStart;
+                    var rowStart = Utilities.getRowStart(textArea, offset);
+                    var rowEnd = Utilities.getRowEnd(textArea, offset);
+                    var xoffset = offset - rowStart;
                     textArea.setCaretPosition(xoffset);
-                    String selectedLine = textArea.getText().substring(rowStart, rowEnd);
+                    var selectedLine = textArea.getText().substring(rowStart, rowEnd);
 
                     // ------------------------------------------------------------------
                     // 2. find the selected word
                     // ------------------------------------------------------------------
                     String selectedWord = null;
-                    int ws = 0; // word start position
-                    int we = 0; // word end position
-                    for (int i = 0; i < selectedLine.length(); i++) {
-                        char c = selectedLine.charAt(i);
+                    var ws = 0; // word start position
+                    var we = 0; // word end position
+                    for (var i = 0; i < selectedLine.length(); i++) {
+                        var c = selectedLine.charAt(i);
 
                         if (c == ' ') { // reached end of word
                             if (i <= xoffset) { // we have not reached the
@@ -172,6 +173,7 @@ class CfTextAreaKeyAndMouseAdapter {
                         textArea.increaseFontSize();
                     }
                 }
+
                 if (isAltKeyDown) {
                     textArea.changeFont();
                 }

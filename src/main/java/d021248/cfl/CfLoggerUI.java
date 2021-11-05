@@ -173,14 +173,14 @@ public class CfLoggerUI implements Runnable {
                 textArea.setHighlight(filterValue);
             }
 
-            cfTargetButton.setEnabled(!textArea.isHighlightOn());
-            cfLogsButton.setEnabled(!textArea.isHighlightOn());
-            clearButton.setEnabled(!textArea.isHighlightOn());
-            cfAppsButton.setEnabled(!textArea.isHighlightOn());
+            // cfTargetButton.setEnabled(!textArea.isHighlightOn());
+            // cfLogsButton.setEnabled(!textArea.isHighlightOn());
+            // clearButton.setEnabled(!textArea.isHighlightOn());
+            // cfAppsButton.setEnabled(!textArea.isHighlightOn());
 
-            if (applyFilter) {
-                filterValueTextField.setText(filterValue);
-            }
+            //if (applyFilter) {
+            filterValueTextField.setText(filterValue);
+            //}
             toggleFilterButton.setEnabled(!filterValueTextField.getText().isEmpty());
             toggleFilterButton.setText(toggleFilterButton.isEnabled() ? BT_FILTER_ON : BT_FILTER_OFF);
 
@@ -210,7 +210,7 @@ public class CfLoggerUI implements Runnable {
             new KeyAdapter() {
                 @Override
                 public void keyTyped(KeyEvent keyEvent) {
-                    String filterValue = String.format(
+                    var filterValue = String.format(
                         "%s%s",
                         filterValueTextField.getText(),
                         getPrintableChar(keyEvent.getKeyChar())
@@ -222,7 +222,7 @@ public class CfLoggerUI implements Runnable {
 
                 @Override
                 public void keyPressed(KeyEvent keyEvent) {
-                    String filterValue = String.format(
+                    var filterValue = String.format(
                         "%s%s",
                         filterValueTextField.getText(),
                         getPrintableChar(keyEvent.getKeyChar())
