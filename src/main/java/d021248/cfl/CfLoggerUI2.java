@@ -63,7 +63,7 @@ class CfLoggerUI2 implements Logger {
         return INSTANCE;
     }
 
-    private CfTextArea textArea = new CfTextArea();
+    private CfTextArea2 textArea = new CfTextArea2();
     private boolean isControlKeyDown = false;
     private boolean isScrollingOn = false;
 
@@ -177,7 +177,7 @@ class CfLoggerUI2 implements Logger {
         JButton toggleFilterButton = new JButton(BT_FILTER_ON);
         BiFunction<String, Boolean, String> setHighlight = (s, b) -> {
             if (s == null || s.length() == 0) {
-                textArea.unsetHighlight();
+                textArea.clearHighlight();
             } else {
                 textArea.setHighlight(s);
             }

@@ -75,7 +75,7 @@ class CfTextAreaKeyAndMouseAdapter {
                 // setHighlight.apply("", true);
                 isScrollingOn = textArea.isScrollingOn();
                 // toggleScrollButton.setText("start auto-scroll");
-                textArea.setScrollingOn(false);
+                textArea.setScrolling(false);
                 super.mousePressed(e);
             }
 

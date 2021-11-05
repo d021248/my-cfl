@@ -7,7 +7,11 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.swing.JTextArea;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Highlighter;
@@ -62,14 +66,32 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     }
 
     @Override
-    protected synchronized void paintComponent(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setColor(getBackground());
-        g2d.fillRect(0, 0, getWidth(), getHeight());
+    protected synchronized void paintComponent(Graphics graphics) {
+        highlight();
+        if (isScrollingOn) {
+            truncate();
+            setCaretPosition(getDocument().getLength());
+        }
 
-        super.paintComponent(g2d);
-        logo.paintLogo(g2d);
-        g2d.dispose();
+        var graphics2d = (Graphics2D) graphics.create();
+        graphics2d.setColor(getBackground());
+        graphics2d.fillRect(0, 0, getWidth(), getHeight());
+
+        super.paintComponent(graphics2d);
+        logo.paintLogo(graphics2d);
+        graphics2d.dispose();
+    }
+
+    public void truncate() {
+        var numLinesToTruncate = this.getLineCount() - MAX_LINES - 1;
+        if (numLinesToTruncate > 0) {
+            try {
+                var posOfLastLineToTrunk = this.getLineEndOffset(numLinesToTruncate - 1);
+                this.replaceRange("", 0, posOfLastLineToTrunk);
+            } catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -80,7 +102,19 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
 
         var line = text.endsWith(CRLF) ? text : String.format("%s%n", text);
         linesBuffer.add(line);
-        super.append(line);
+
+        if (isHighlightOn && isFilterOn) {
+            try {
+                if (line.matches(highlightValueRegexp)) {
+                    super.append(String.format("%s%s", FILTER_PREFIX, line));
+                }
+            } catch (PatternSyntaxException pse) {
+                super.append(String.format("%s%s", FILTER_PREFIX, line));
+            }
+        } else {
+            super.append(line);
+        }
+
         repaint();
     }
 
@@ -98,25 +132,83 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         repaint();
     }
 
+    // ----------------------------------------------------------------------------------------
+    // scrolling
+    // ----------------------------------------------------------------------------------------
+    private boolean isScrollingOn = true;
+
     public boolean isScrollingOn() {
-        return false;
+        return isScrollingOn;
     }
 
-    public void setScrollingOn(boolean b) {}
+    public void setScrolling(boolean isScrolling) {
+        isScrollingOn = isScrolling;
+        repaint();
+    }
+
+    // ----------------------------------------------------------------------------------------
+    // filtering & highlighting
+    // ----------------------------------------------------------------------------------------
+    private static final String FILTER_PREFIX = "]";
+    private String highlightValue = null;
+    private String highlightValueRegexp = null;
+    private boolean isHighlightOn = false;
+    private boolean isFilterOn = false;
+
+    public void highlight() {
+        var highliter = getHighlighter();
+        highliter.removeAllHighlights();
+        if (!isHighlightOn) {
+            return;
+        }
+        var pattern = Pattern.compile(Pattern.quote(highlightValue));
+        var text = getText();
+        var matcher = pattern.matcher(text);
+        while (matcher.find()) {
+            try {
+                highliter.addHighlight(matcher.start(), matcher.end(), defaultHighlightPainter);
+            } catch (BadLocationException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public boolean isHighlightOn() {
-        return false;
+        return isHighlightOn;
     }
-
-    public void unsetHighlight() {}
-
-    public void setHighlighter(Highlighter h) {}
-
-    public void setFilter(boolean b) {}
 
     public boolean isFilterOn() {
-        return false;
+        return isFilterOn;
     }
 
-    public void setHighlight(String s) {}
+    public void setHighlight(String newHighlightValue) {
+        if (newHighlightValue == null) {
+            return;
+        }
+        isHighlightOn = true;
+        highlightValue = newHighlightValue.trim();
+        highlightValueRegexp = String.format(".*%s.*", highlightValue);
+        setText("");
+        new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+    }
+
+    public void setFilter(boolean setFilterOn) {
+        if (isFilterOn && !setFilterOn) {
+            isFilterOn = false;
+            new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+            return;
+        }
+
+        if (!isFilterOn && setFilterOn && isHighlightOn) {
+            isFilterOn = true;
+            new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+            return;
+        }
+    }
+
+    public void clearHighlight() {
+        getHighlighter().removeAllHighlights();
+        isHighlightOn = false;
+        new ArrayList<String>(linesBuffer).stream().forEach(this::append);
+    }
 }
