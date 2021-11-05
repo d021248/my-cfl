@@ -5,6 +5,7 @@ import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -95,17 +96,17 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         var cfTargetButton = new JButton(BT_CF_TARGET);
-        cfTargetButton.addActionListener(
-            e ->
-                new Thread(
-                    () -> {
-                        var target = Cf.target(this::logger);
-                        SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space)));
-                    }
-                )
-                    .start()
-        );
+        ActionListener cfTargetButtonActionListener = e ->
+            new Thread(
+                () -> {
+                    var target = Cf.target(this::logger);
+                    SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space)));
+                }
+            )
+                .start();
+        cfTargetButton.addActionListener(cfTargetButtonActionListener);
         buttonPanel.add(cfTargetButton);
+        new Thread(() -> cfTargetButtonActionListener.actionPerformed(null)).start();
 
         var cfAppsButton = new JButton(BT_CF_APPS);
         cfAppsButton.addActionListener(e -> new Thread(() -> Cf.apps(this::logger)).start());

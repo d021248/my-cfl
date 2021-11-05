@@ -20,11 +20,12 @@ public class Cf {
 
     public static Target target(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "target").stdoutConsumer(logger.andThen(lines::add)).run();
+        Shell.cmd("cf", "target").stdoutConsumer(lines::add).run();
 
         var attrList = new ArrayList<String>();
         lines
             .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(matcher -> matcher.group(1))
