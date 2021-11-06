@@ -1,30 +1,59 @@
 package d021248.cfl;
 
+import d021248.cfl.cmd.Shell;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.util.function.BiFunction;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
 
-class KeyAndMouseAdapter {
+public class KeyAndMouseAdapter {
 
-    private final CfTextArea textArea;
+    private CfLoggerUI loggerUI;
+    private CfTextArea textArea;
 
-    KeyAndMouseAdapter(CfTextArea textArea) {
-        this.textArea = textArea;
-        this.textArea.addKeyListener(keyAdapter);
-        this.textArea.addMouseWheelListener(mouseAdapter);
-        this.textArea.addMouseMotionListener(mouseAdapter);
-        this.textArea.addMouseListener(mouseAdapter);
+    public KeyAndMouseAdapter(CfLoggerUI loggerUI) {
+        this.loggerUI = loggerUI;
+        this.loggerUI.filterValueTextField.addKeyListener(cfLoggerUIKeyAdapter);
+
+        this.textArea = loggerUI.textArea;
+        this.textArea.addKeyListener(textAreaKeyAdapter);
+        this.textArea.addMouseWheelListener(textAreaMouseAdapter);
+        this.textArea.addMouseMotionListener(textAreaMouseAdapter);
+        this.textArea.addMouseListener(textAreaMouseAdapter);
     }
+
+    BiFunction<String, Boolean, String> setHighlight = (filterValue, applyFilter) -> {
+        if (filterValue == null || filterValue.isBlank()) {
+            textArea.stopHighlight();
+        } else {
+            textArea.setHighlightText(filterValue);
+            textArea.startHighlight();
+        }
+
+        if (applyFilter) {
+            loggerUI.filterValueTextField.setText(filterValue);
+        }
+
+        // toggleFilterButton.setEnabled(!filterValueTextField.getText().isEmpty());
+        // toggleFilterButton.setText(toggleFilterButton.isEnabled() ? BT_FILTER_ON :
+        // BT_FILTER_OFF);
+
+        // copy to clipboard
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);
+        return filterValue;
+    };
 
     private boolean isControlKeyDown = false;
     private boolean isAltKeyDown = false;
     private boolean isScrollingOn = false;
 
-    private KeyAdapter keyAdapter = new KeyAdapter() {
+    private KeyAdapter textAreaKeyAdapter = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
             isControlKeyDown = e.isControlDown();
@@ -38,7 +67,7 @@ class KeyAndMouseAdapter {
         }
     };
 
-    private MouseAdapter mouseAdapter = new MouseAdapter() {
+    private MouseAdapter textAreaMouseAdapter = new MouseAdapter() {
         boolean isDraggedOn = false;
         int start = 0;
         int end = 0;
@@ -62,7 +91,7 @@ class KeyAndMouseAdapter {
             textArea.setSelectionStart(start < end ? start : end);
             textArea.setSelectionEnd(start > end ? start : end);
             textArea.setHighlightText(textArea.getSelectedText());
-            // setHighlight.apply(getSelectedText(), true);
+            setHighlight.apply(textArea.getHighlightText(), true);
         }
 
         @Override
@@ -180,6 +209,50 @@ class KeyAndMouseAdapter {
             }
 
             super.mouseWheelMoved(e);
+        }
+    };
+
+    private KeyAdapter cfLoggerUIKeyAdapter = new KeyAdapter() {
+        @Override
+        public void keyTyped(KeyEvent keyEvent) {
+            var filterValue = String.format(
+                "%s%s",
+                loggerUI.filterValueTextField.getText(),
+                getPrintableChar(keyEvent.getKeyChar())
+            );
+            if (!filterValue.startsWith(">")) {
+                KeyAndMouseAdapter.this.setHighlight.apply(filterValue, false);
+            }
+        }
+
+        @Override
+        public void keyPressed(KeyEvent keyEvent) {
+            var filterValue = String.format(
+                "%s%s",
+                loggerUI.filterValueTextField.getText(),
+                getPrintableChar(keyEvent.getKeyChar())
+            );
+            if (filterValue.startsWith(">")) {
+                if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                    var command = filterValue.substring(1).trim();
+                    new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger)).start();
+                    KeyAndMouseAdapter.this.setHighlight.apply("", false);
+                }
+            }
+        }
+
+        public String getPrintableChar(char c) {
+            return isPrintableChar(c) ? String.valueOf(c) : "";
+        }
+
+        public boolean isPrintableChar(char c) {
+            var block = Character.UnicodeBlock.of(c);
+            return (
+                (!Character.isISOControl(c)) &&
+                c != KeyEvent.CHAR_UNDEFINED &&
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS
+            );
         }
     };
 }

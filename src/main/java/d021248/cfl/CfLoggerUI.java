@@ -51,7 +51,9 @@ public class CfLoggerUI implements Runnable {
 
     private static final String SAVE_FILEPATH = "./tmp.txt";
 
-    private CfTextArea textArea;
+    protected CfTextArea textArea;
+    protected KeyAndMouseAdapter keyAndMouseAdapter;
+    protected JTextField filterValueTextField;
 
     public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
@@ -161,32 +163,8 @@ public class CfLoggerUI implements Runnable {
         // ------------------------------------------------------------------
         // add the filter
         // ------------------------------------------------------------------
-        var filterValueTextField = new JTextField("", 20);
         var toggleFilterButton = new JButton(BT_FILTER_ON);
-        BiFunction<String, Boolean, String> setHighlight = (filterValue, applyFilter) -> {
-            if (filterValue == null || filterValue.isBlank()) {
-                textArea.stopHighlight();
-            } else {
-                textArea.setHighlightText(filterValue);
-                textArea.startHighlight();
-            }
-
-            // cfTargetButton.setEnabled(!textArea.isHighlightOn());
-            // cfLogsButton.setEnabled(!textArea.isHighlightOn());
-            // clearButton.setEnabled(!textArea.isHighlightOn());
-            // cfAppsButton.setEnabled(!textArea.isHighlightOn());
-
-            // if (applyFilter) {
-            // filterValueTextField.setText(filterValue);
-            // }
-            // System.err.println(filterValueTextField.getText());
-            toggleFilterButton.setEnabled(!filterValueTextField.getText().isEmpty());
-            toggleFilterButton.setText(toggleFilterButton.isEnabled() ? BT_FILTER_ON : BT_FILTER_OFF);
-
-            // copy to clipboard
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);
-            return filterValue;
-        };
+        filterValueTextField = new JTextField("", 20);
 
         toggleFilterButton.addActionListener(
             e -> {
@@ -204,52 +182,6 @@ public class CfLoggerUI implements Runnable {
             }
         );
         toggleFilterButton.setEnabled(false);
-
-        filterValueTextField.addKeyListener(
-            new KeyAdapter() {
-                @Override
-                public void keyTyped(KeyEvent keyEvent) {
-                    var filterValue = String.format(
-                        "%s%s",
-                        filterValueTextField.getText(),
-                        getPrintableChar(keyEvent.getKeyChar())
-                    );
-                    if (!filterValue.startsWith(">")) {
-                        setHighlight.apply(filterValue, false);
-                    }
-                }
-
-                @Override
-                public void keyPressed(KeyEvent keyEvent) {
-                    var filterValue = String.format(
-                        "%s%s",
-                        filterValueTextField.getText(),
-                        getPrintableChar(keyEvent.getKeyChar())
-                    );
-                    if (filterValue.startsWith(">")) {
-                        if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                            var command = filterValue.substring(1).trim();
-                            new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(CfLoggerUI.this::logger)).start();
-                            setHighlight.apply("", false);
-                        }
-                    }
-                }
-
-                public String getPrintableChar(char c) {
-                    return isPrintableChar(c) ? String.valueOf(c) : "";
-                }
-
-                public boolean isPrintableChar(char c) {
-                    var block = Character.UnicodeBlock.of(c);
-                    return (
-                        (!Character.isISOControl(c)) &&
-                        c != KeyEvent.CHAR_UNDEFINED &&
-                        block != null &&
-                        block != Character.UnicodeBlock.SPECIALS
-                    );
-                }
-            }
-        );
 
         var filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
@@ -278,6 +210,7 @@ public class CfLoggerUI implements Runnable {
         // add the frame itself
         // ------------------------------------------------------------------
         // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        keyAndMouseAdapter = new KeyAndMouseAdapter(this);
         frame.setLocation(200, 200);
         frame.setLayout(new BorderLayout());
         frame.getContentPane().add(textAreaScrollPane, BorderLayout.CENTER);
