@@ -12,7 +12,7 @@ import java.util.function.BiFunction;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
 
-public class KeyAndMouseAdapter {
+class KeyAndMouseAdapter {
 
     private CfLoggerUI loggerUI;
     private CfTextArea textArea;
@@ -28,7 +28,7 @@ public class KeyAndMouseAdapter {
         this.textArea.addMouseListener(textAreaMouseAdapter);
     }
 
-    BiFunction<String, Boolean, String> setHighlight = (filterValue, applyFilter) -> {
+    private BiFunction<String, Boolean, String> applyHighlight = (filterValue, applyFilter) -> {
         if (filterValue == null || filterValue.isBlank()) {
             textArea.stopHighlight();
         } else {
@@ -91,7 +91,7 @@ public class KeyAndMouseAdapter {
             textArea.setSelectionStart(start < end ? start : end);
             textArea.setSelectionEnd(start > end ? start : end);
             textArea.setHighlightText(textArea.getSelectedText());
-            setHighlight.apply(textArea.getHighlightText(), true);
+            applyHighlight.apply(textArea.getHighlightText(), true);
         }
 
         @Override
@@ -187,9 +187,9 @@ public class KeyAndMouseAdapter {
                 // ------------------------------------------------------------------
                 if (textArea.isHighlightActive()) {
                     textArea.stopFilter();
-                    setHighlight.apply("", true);
+                    applyHighlight.apply("", true);
                 } else {
-                    setHighlight.apply(selectedWord, true);
+                    applyHighlight.apply(selectedWord, true);
                 }
             } catch (BadLocationException e1) {}
         }
@@ -221,7 +221,7 @@ public class KeyAndMouseAdapter {
                 toPrintableChar(keyEvent.getKeyChar())
             );
             if (!filterValue.startsWith(">")) {
-                KeyAndMouseAdapter.this.setHighlight.apply(filterValue, false);
+                KeyAndMouseAdapter.this.applyHighlight.apply(filterValue, false);
             }
         }
 
@@ -236,7 +236,7 @@ public class KeyAndMouseAdapter {
                 if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                     var command = filterValue.substring(1).trim();
                     new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger)).start();
-                    KeyAndMouseAdapter.this.setHighlight.apply("", false);
+                    KeyAndMouseAdapter.this.applyHighlight.apply("", false);
                 }
             }
         }
