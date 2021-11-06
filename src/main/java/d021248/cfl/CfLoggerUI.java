@@ -8,7 +8,6 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -50,7 +48,6 @@ public class CfLoggerUI implements Runnable {
     private static final String BT_FILTER_ON = "filter on";
     private static final String BT_FILTER_OFF = "filter off";
     private static final String BT_SAVE = "save";
-    private static final String CRLF = System.getProperty("line.separator", "\n");
 
     private static final String SAVE_FILEPATH = "./tmp.txt";
 
@@ -167,10 +164,11 @@ public class CfLoggerUI implements Runnable {
         var filterValueTextField = new JTextField("", 20);
         var toggleFilterButton = new JButton(BT_FILTER_ON);
         BiFunction<String, Boolean, String> setHighlight = (filterValue, applyFilter) -> {
-            if (filterValue == null || filterValue.isEmpty()) {
-                textArea.clearHighlight();
+            if (filterValue == null || filterValue.isBlank()) {
+                textArea.stopHighlight();
             } else {
-                textArea.setHighlight(filterValue);
+                textArea.setHighlightText(filterValue);
+                textArea.startHighlight();
             }
 
             // cfTargetButton.setEnabled(!textArea.isHighlightOn());
@@ -178,9 +176,10 @@ public class CfLoggerUI implements Runnable {
             // clearButton.setEnabled(!textArea.isHighlightOn());
             // cfAppsButton.setEnabled(!textArea.isHighlightOn());
 
-            //if (applyFilter) {
-            filterValueTextField.setText(filterValue);
-            //}
+            // if (applyFilter) {
+            // filterValueTextField.setText(filterValue);
+            // }
+            // System.err.println(filterValueTextField.getText());
             toggleFilterButton.setEnabled(!filterValueTextField.getText().isEmpty());
             toggleFilterButton.setText(toggleFilterButton.isEnabled() ? BT_FILTER_ON : BT_FILTER_OFF);
 
@@ -191,16 +190,16 @@ public class CfLoggerUI implements Runnable {
 
         toggleFilterButton.addActionListener(
             e -> {
-                if (!textArea.isHighlightOn()) {
+                if (!textArea.isHighlightActive()) {
                     return;
                 }
 
-                if (textArea.isFilterOn()) {
+                if (textArea.isFilterActive()) {
                     toggleFilterButton.setText(BT_FILTER_ON);
-                    textArea.setFilter(false);
+                    textArea.stopFilter();
                 } else {
                     toggleFilterButton.setText(BT_FILTER_OFF);
-                    textArea.setFilter(true);
+                    textArea.startFilter();
                 }
             }
         );
@@ -320,13 +319,8 @@ public class CfLoggerUI implements Runnable {
         }
     }
 
-    public void logger(String s) {
-        System.err.println(s);
-        try {
-            textArea.append(s);
-        } catch (Throwable t) {
-            System.err.println(">>>" + t);
-            System.err.println(">>>" + t.getMessage());
-        }
+    public void logger(String text) {
+        System.err.println(text);
+        textArea.append(text);
     }
 }

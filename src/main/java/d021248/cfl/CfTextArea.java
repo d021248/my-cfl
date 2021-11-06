@@ -7,16 +7,14 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
-import javax.swing.text.Highlighter;
 
-class CfTextArea extends JTextArea implements AdjustmentListener {
+class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListener {
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
     private static final int MAX_LINES = 100_000;
@@ -34,14 +32,14 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
 
     private final CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
 
-    private final CfTextAreaKeyAndMouseAdapter adapter;
+    private final KeyAndMouseAdapter adapter;
 
     public CfTextArea() {
         super();
         setHighlighter(new DefaultHighlighter());
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
-        this.adapter = new CfTextAreaKeyAndMouseAdapter(this);
+        this.adapter = new KeyAndMouseAdapter(this);
     }
 
     // ----------------------------------------------------------------------------------------
@@ -67,7 +65,7 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
 
     @Override
     protected synchronized void paintComponent(Graphics graphics) {
-        highlight();
+        startHighlight();
         if (isScrollingOn) {
             truncate();
             setCaretPosition(getDocument().getLength());
@@ -103,9 +101,9 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         var line = text.endsWith(CRLF) ? text : String.format("%s%n", text);
         linesBuffer.add(line);
 
-        if (isHighlightOn && isFilterOn) {
+        if (isHighlightActive && isFilterActive) {
             try {
-                if (line.matches(highlightValueRegexp)) {
+                if (line.matches(highlightRegexp)) {
                     super.append(String.format("%s%s", FILTER_PREFIX, line));
                 }
             } catch (PatternSyntaxException pse) {
@@ -157,18 +155,69 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
     // filtering & highlighting
     // ----------------------------------------------------------------------------------------
     private static final String FILTER_PREFIX = "]";
-    private String highlightValue = null;
-    private String highlightValueRegexp = null;
-    private boolean isHighlightOn = false;
-    private boolean isFilterOn = false;
+    private String highlightText = null;
+    private String highlightRegexp = null;
+    private boolean isHighlightActive = false;
+    private boolean isFilterActive = false;
 
-    public void highlight() {
-        var highliter = getHighlighter();
-        highliter.removeAllHighlights();
-        if (!isHighlightOn) {
+    @Override
+    public void setFilterText(String text) {
+        setHighlightText(text);
+    }
+
+    @Override
+    public String getFilterText() {
+        return getHighlightText();
+    }
+
+    @Override
+    public void startFilter() {
+        if (isFilterActive) {
+            isFilterActive = false;
+            refresh();
+        } else {
+            if (isHighlightActive) {
+                isFilterActive = true;
+                refresh();
+            }
+        }
+    }
+
+    @Override
+    public void stopFilter() {
+        isFilterActive = false;
+        refresh();
+    }
+
+    @Override
+    public boolean isFilterActive() {
+        return isFilterActive;
+    }
+
+    @Override
+    public void setHighlightText(String text) {
+        if (text == null) {
             return;
         }
-        var pattern = Pattern.compile(Pattern.quote(highlightValue));
+        isHighlightActive = true;
+        highlightText = text.trim();
+        highlightRegexp = String.format(".*%s.*", highlightText);
+        refresh();
+    }
+
+    @Override
+    public String getHighlightText() {
+        return highlightText;
+    }
+
+    @Override
+    public void startHighlight() {
+        var highliter = getHighlighter();
+        highliter.removeAllHighlights();
+        if (!isHighlightActive) {
+            return;
+        }
+        var pattern = Pattern.compile(Pattern.quote(highlightText));
         var text = getText();
         var matcher = pattern.matcher(text);
         while (matcher.find()) {
@@ -180,41 +229,15 @@ class CfTextArea extends JTextArea implements AdjustmentListener {
         }
     }
 
-    public boolean isHighlightOn() {
-        return isHighlightOn;
-    }
-
-    public boolean isFilterOn() {
-        return isFilterOn;
-    }
-
-    public void setHighlight(String newHighlightValue) {
-        if (newHighlightValue == null) {
-            return;
-        }
-        isHighlightOn = true;
-        highlightValue = newHighlightValue.trim();
-        highlightValueRegexp = String.format(".*%s.*", highlightValue);
-        refresh();
-    }
-
-    public void setFilter(boolean setFilterOn) {
-        if (isFilterOn && !setFilterOn) {
-            isFilterOn = false;
-            refresh();
-            return;
-        }
-
-        if (!isFilterOn && setFilterOn && isHighlightOn) {
-            isFilterOn = true;
-            refresh();
-            return;
-        }
-    }
-
-    public void clearHighlight() {
+    @Override
+    public void stopHighlight() {
         getHighlighter().removeAllHighlights();
-        isHighlightOn = false;
+        isHighlightActive = false;
         refresh();
+    }
+
+    @Override
+    public boolean isHighlightActive() {
+        return isHighlightActive;
     }
 }
