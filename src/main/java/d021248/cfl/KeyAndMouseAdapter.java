@@ -191,8 +191,7 @@ public class KeyAndMouseAdapter {
                 } else {
                     setHighlight.apply(selectedWord, true);
                 }
-            } catch (BadLocationException e1) {
-            }
+            } catch (BadLocationException e1) {}
         }
 
         @Override
@@ -216,8 +215,11 @@ public class KeyAndMouseAdapter {
     private KeyAdapter cfLoggerUIKeyAdapter = new KeyAdapter() {
         @Override
         public void keyTyped(KeyEvent keyEvent) {
-            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
-                    toPrintableChar(keyEvent.getKeyChar()));
+            var filterValue = String.format(
+                "%s%s",
+                loggerUI.filterValueTextField.getText(),
+                toPrintableChar(keyEvent.getKeyChar())
+            );
             if (!filterValue.startsWith(">")) {
                 KeyAndMouseAdapter.this.setHighlight.apply(filterValue, false);
             }
@@ -225,8 +227,11 @@ public class KeyAndMouseAdapter {
 
         @Override
         public void keyPressed(KeyEvent keyEvent) {
-            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
-                    toPrintableChar(keyEvent.getKeyChar()));
+            var filterValue = String.format(
+                "%s%s",
+                loggerUI.filterValueTextField.getText(),
+                toPrintableChar(keyEvent.getKeyChar())
+            );
             if (filterValue.startsWith(">")) {
                 if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                     var command = filterValue.substring(1).trim();
@@ -242,8 +247,12 @@ public class KeyAndMouseAdapter {
 
         public boolean isPrintableChar(char c) {
             var block = Character.UnicodeBlock.of(c);
-            return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
-                    && block != Character.UnicodeBlock.SPECIALS);
+            return (
+                (!Character.isISOControl(c)) &&
+                c != KeyEvent.CHAR_UNDEFINED &&
+                block != null &&
+                block != Character.UnicodeBlock.SPECIALS
+            );
         }
     };
 }

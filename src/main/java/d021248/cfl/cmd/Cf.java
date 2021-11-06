@@ -20,7 +20,7 @@ public class Cf {
 
     public static Target target(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "target").stdoutConsumer(lines::add).run();
+        Shell.cmd("cf", "target").stdoutConsumer(lines::add).stderrConsumer(logger).run();
 
         var attrList = new ArrayList<String>();
         lines
@@ -39,7 +39,7 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).run();
+        Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).stderrConsumer(logger).run();
         return lines
             .stream()
             .map(APPS_PATTERN::matcher)
@@ -65,7 +65,7 @@ public class Cf {
     public static String env(String app, Consumer<String> logger) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "env", app).stdoutConsumer(logger.andThen(lines::add)).run();
+        Shell.cmd("cf", "env", app).stdoutConsumer(logger.andThen(lines::add)).stderrConsumer(logger).run();
         var envJson = lines
             .stream()
             .dropWhile(line -> !line.equals("{"))
@@ -82,7 +82,7 @@ public class Cf {
     }
 
     public static void logs(Consumer<String> logger) {
-        Cf.apps().stream().forEach(app -> Cf.logs(app.name, logger));
+        Cf.apps(logger).stream().forEach(app -> Cf.logs(app.name, logger));
     }
 
     public static void logs(String appName, Consumer<String> logger) {
@@ -90,7 +90,7 @@ public class Cf {
             logger.accept(
                 line.isEmpty() ? "" : (line.startsWith(">") ? line : String.format("%-22s: %s", appName, line.trim()))
             );
-        var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer);
+        var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer).stderrConsumer(logger);
         Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
     }
