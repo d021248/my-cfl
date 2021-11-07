@@ -50,6 +50,7 @@ public class CfLoggerUI implements Runnable {
     protected CfTextArea textArea;
     protected JTextField filterValueTextField;
     protected JButton toggleFilterButton;
+    protected JButton toggleScrollButton;
 
     public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
@@ -133,7 +134,7 @@ public class CfLoggerUI implements Runnable {
         clearButton.addActionListener(e -> textArea.clear());
         buttonPanel.add(clearButton);
 
-        var toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
+        toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
         toggleScrollButton.addActionListener(
             e -> {
                 if (textArea.isScrollingOn()) {
@@ -198,14 +199,13 @@ public class CfLoggerUI implements Runnable {
         // ------------------------------------------------------------------
         // add the button
         // ------------------------------------------------------------------
-        var save = new JButton(BT_SAVE);
-        // TODO save.addActionListener(e -> new Thread(() -> this.save()).start());
-        buttonPanel.add(save);
+        var saveButton = new JButton(BT_SAVE);
+        saveButton.addActionListener(e -> new Thread(() -> this.save()).start());
+        buttonPanel.add(saveButton);
 
         // ------------------------------------------------------------------
         // add the frame itself
         // ------------------------------------------------------------------
-        // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         keyAndMouseAdapter = new KeyAndMouseAdapter(this);
         frame.setLocation(200, 200);
         frame.setLayout(new BorderLayout());
@@ -215,6 +215,7 @@ public class CfLoggerUI implements Runnable {
             frame.setIconImage(image);
         }
 
+        // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         var windowAdapter = new WindowAdapter() {
             @Override

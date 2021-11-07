@@ -129,8 +129,8 @@ class KeyAndMouseAdapter {
             }
 
             if (e.getClickCount() != 2) {
-                // toggleScrollButton.setText("stop auto-scroll");
-                // textArea.setScrolling(true);
+                loggerUI.toggleScrollButton.setText("stop auto-scroll");
+                textArea.setScrolling(true);
                 return;
             }
             if (e.isConsumed()) {
