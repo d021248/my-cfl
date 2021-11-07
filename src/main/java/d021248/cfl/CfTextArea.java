@@ -22,10 +22,8 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
     private static final int MIN_FONT_SIZE = 4;
     private static final int MAX_FONT_SIZE = 32;
     private static final List<String> FONT_NAMES = List.of("Arial", "Courier", "Helvetica", "Monospaced", "Plain");
-    private static final String LOGO = "D021248.png";
 
     private static final long serialVersionUID = 1L;
-
     private final transient DefaultHighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(
         new Color(128, 196, 255)
     );
@@ -35,12 +33,13 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
 
     private final List<String> linesBuffer = new ArrayList<>();
 
-    private final CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
+    private final transient CfLogo logo = new CfLogo(this);
 
     public CfTextArea() {
         super();
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
+        new Thread(logo).start();
     }
 
     // ----------------------------------------------------------------------------------------
@@ -62,6 +61,10 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
         fontNameIndex = (fontNameIndex + 1) % FONT_NAMES.size();
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
         repaint();
+    }
+
+    public void exit() {
+        this.logo.exit();
     }
 
     @Override
