@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
 
 public class Cf {
 
-    private static final Pattern TARGET_PATTERN = Pattern.compile("^\\S+:\\s+(\\S+)$");
+    // is correct, but does not work: private static final Pattern TARGET_PATTERN =
+    // Pattern.compile("^\\S+:\\s+(\\S+)$");
+    private static final Pattern TARGET_PATTERN = Pattern.compile(".*:(.*)");
     private static final Pattern APPS_PATTERN = Pattern.compile(
         "^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$"
     );
@@ -29,6 +31,7 @@ public class Cf {
             .map(TARGET_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(matcher -> matcher.group(1))
+            .map(String::trim)
             .forEach(attrList::add);
         return new Target(attrList.get(0), attrList.get(1), attrList.get(2), attrList.get(3), attrList.get(4));
     }
@@ -39,9 +42,10 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).stderrConsumer(logger).run();
+        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).stderrConsumer(logger).run();
         return lines
             .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
             .map(APPS_PATTERN::matcher)
             .filter(Matcher::matches)
             .map(
@@ -65,9 +69,10 @@ public class Cf {
     public static String env(String app, Consumer<String> logger) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "env", app).stdoutConsumer(logger.andThen(lines::add)).stderrConsumer(logger).run();
+        Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).stderrConsumer(logger).run();
         var envJson = lines
             .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
             .dropWhile(line -> !line.equals("{"))
             .takeWhile(line -> !line.equals("}"))
             .collect(Collectors.joining(CRLF, "", postfix));
