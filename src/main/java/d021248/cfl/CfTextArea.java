@@ -1,5 +1,6 @@
 package d021248.cfl;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -25,6 +26,10 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
 
     private static final long serialVersionUID = 1L;
 
+    private final transient DefaultHighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(
+        new Color(92, 164, 255)
+    );
+
     private int fontSize = 11;
     private int fontNameIndex = 3;
 
@@ -34,7 +39,6 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
 
     public CfTextArea() {
         super();
-        setHighlighter(new DefaultHighlighter());
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
     }
@@ -100,7 +104,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
 
         if (isHighlightActive && isFilterActive) {
             try {
-                if (line.matches(highlightRegexp)) {
+                if (highlightPattern.matcher(line).find()) {
                     super.append(String.format("%s%s", FILTER_PREFIX, line));
                 }
             } catch (PatternSyntaxException pse) {
@@ -124,10 +128,6 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
         setText("");
         tmp.stream().forEach(this::append);
     }
-
-    private final DefaultHighlightPainter defaultHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(
-        null
-    );
 
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
@@ -153,7 +153,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
     // ----------------------------------------------------------------------------------------
     private static final String FILTER_PREFIX = "]";
     private String highlightText = null;
-    private String highlightRegexp = null;
+    private Pattern highlightPattern = null;
     private boolean isHighlightActive = false;
     private boolean isFilterActive = false;
 
@@ -198,7 +198,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
         }
         isHighlightActive = true;
         highlightText = text.trim();
-        highlightRegexp = String.format(".*%s.*", highlightText);
+        highlightPattern = Pattern.compile(Pattern.quote(highlightText));
         refresh();
     }
 
@@ -214,12 +214,10 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
         if (!isHighlightActive) {
             return;
         }
-        var pattern = Pattern.compile(Pattern.quote(highlightText));
-        var text = getText();
-        var matcher = pattern.matcher(text);
+        var matcher = highlightPattern.matcher(getText());
         while (matcher.find()) {
             try {
-                highliter.addHighlight(matcher.start(), matcher.end(), defaultHighlightPainter);
+                highliter.addHighlight(matcher.start(), matcher.end(), painter);
             } catch (BadLocationException e) {
                 e.printStackTrace();
             }

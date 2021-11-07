@@ -175,7 +175,7 @@ public class CfLoggerUI implements Runnable {
                 }
             }
         );
-        toggleFilterButton.setEnabled(false);
+        toggleFilterButton.setEnabled(true);
 
         var filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
