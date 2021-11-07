@@ -48,6 +48,7 @@ public class CfLoggerUI implements Runnable {
     // accessible for KeyAndMouseAdapter
     protected KeyAndMouseAdapter keyAndMouseAdapter;
     protected CfTextArea textArea;
+    protected JScrollPane textAreaScrollPane;
     protected JTextField filterValueTextField;
     protected JButton toggleFilterButton;
     protected JButton toggleScrollButton;
@@ -86,7 +87,7 @@ public class CfLoggerUI implements Runnable {
         // add the TextArea
         // ------------------------------------------------------------------
         textArea = new CfTextArea();
-        var textAreaScrollPane = new JScrollPane(textArea);
+        textAreaScrollPane = new JScrollPane(textArea);
         textAreaScrollPane.setBorder(BorderFactory.createEtchedBorder());
         textAreaScrollPane.getHorizontalScrollBar().addAdjustmentListener(textArea);
         textAreaScrollPane.getVerticalScrollBar().addAdjustmentListener(textArea);

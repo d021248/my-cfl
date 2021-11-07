@@ -20,10 +20,10 @@ class KeyAndMouseAdapter {
     public KeyAndMouseAdapter(CfLoggerUI loggerUI) {
         this.loggerUI = loggerUI;
         this.loggerUI.filterValueTextField.addKeyListener(cfLoggerUIKeyAdapter);
+        this.loggerUI.textAreaScrollPane.addMouseWheelListener(textAreaMouseAdapter);
 
         this.textArea = loggerUI.textArea;
         this.textArea.addKeyListener(textAreaKeyAdapter);
-        this.textArea.addMouseWheelListener(textAreaMouseAdapter);
         this.textArea.addMouseMotionListener(textAreaMouseAdapter);
         this.textArea.addMouseListener(textAreaMouseAdapter);
     }
