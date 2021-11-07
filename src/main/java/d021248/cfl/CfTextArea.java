@@ -27,7 +27,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
     private static final long serialVersionUID = 1L;
 
     private final transient DefaultHighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(
-        new Color(92, 164, 255)
+        new Color(128, 196, 255)
     );
 
     private int fontSize = 11;

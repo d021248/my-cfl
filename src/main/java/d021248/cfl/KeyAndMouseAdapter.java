@@ -36,13 +36,14 @@ class KeyAndMouseAdapter {
             textArea.startHighlight();
         }
 
-        if (applyFilter) {
+        if (Boolean.TRUE.equals(applyFilter)) {
             loggerUI.filterValueTextField.setText(filterValue);
         }
 
-        // toggleFilterButton.setEnabled(!filterValueTextField.getText().isEmpty());
-        // toggleFilterButton.setText(toggleFilterButton.isEnabled() ? BT_FILTER_ON :
-        // BT_FILTER_OFF);
+        this.loggerUI.toggleFilterButton.setEnabled(!this.loggerUI.filterValueTextField.getText().isEmpty());
+        this.loggerUI.toggleFilterButton.setText(
+                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF
+            );
 
         // copy to clipboard
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);

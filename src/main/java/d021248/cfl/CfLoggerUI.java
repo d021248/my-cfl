@@ -33,21 +33,23 @@ public class CfLoggerUI implements Runnable {
     private static final String LOGO = "D021248.jpg";
 
     // Button Texts
-    private static final String BT_CF_TARGET = "cf target";
-    private static final String BT_CF_APPS = "cf apps";
-    private static final String BT_LOG_ALL = "log all";
-    private static final String BT_CLEAR = "clear";
-    private static final String BT_START_AUTO_SCROLL = "start auto-scroll";
-    private static final String BT_STOP_AUTO_SCROLL = "stop auto-scroll";
-    private static final String BT_FILTER_ON = "filter on";
-    private static final String BT_FILTER_OFF = "filter off";
-    private static final String BT_SAVE = "save";
+    protected static final String BT_CF_TARGET = "cf target";
+    protected static final String BT_CF_APPS = "cf apps";
+    protected static final String BT_LOG_ALL = "log all";
+    protected static final String BT_CLEAR = "clear";
+    protected static final String BT_START_AUTO_SCROLL = "start auto-scroll";
+    protected static final String BT_STOP_AUTO_SCROLL = "stop auto-scroll";
+    protected static final String BT_FILTER_ON = "filter on";
+    protected static final String BT_FILTER_OFF = "filter off";
+    protected static final String BT_SAVE = "save";
 
     private static final String SAVE_FILEPATH = "./tmp.txt";
 
-    protected CfTextArea textArea;
+    // accessible for KeyAndMouseAdapter
     protected KeyAndMouseAdapter keyAndMouseAdapter;
+    protected CfTextArea textArea;
     protected JTextField filterValueTextField;
+    protected JButton toggleFilterButton;
 
     public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
@@ -157,7 +159,7 @@ public class CfLoggerUI implements Runnable {
         // ------------------------------------------------------------------
         // add the filter
         // ------------------------------------------------------------------
-        var toggleFilterButton = new JButton(BT_FILTER_ON);
+        toggleFilterButton = new JButton(BT_FILTER_ON);
         filterValueTextField = new JTextField("", 20);
 
         toggleFilterButton.addActionListener(
@@ -175,7 +177,7 @@ public class CfLoggerUI implements Runnable {
                 }
             }
         );
-        toggleFilterButton.setEnabled(true);
+        toggleFilterButton.setEnabled(false);
 
         var filterValueTextPanel = new JPanel(new BorderLayout());
         // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
@@ -219,6 +221,7 @@ public class CfLoggerUI implements Runnable {
             public void windowClosing(WindowEvent event) {
                 frame.dispose();
                 Command.stopAll();
+                System.err.println(String.format("exit: %s", CfLoggerUI.this.getClass().getSimpleName()));
                 // System.exit(0);
             }
         };
