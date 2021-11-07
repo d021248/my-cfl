@@ -140,7 +140,7 @@ class KeyAndMouseAdapter {
             // ------------------------------------------------------------------
             // find the selected word
             // ------------------------------------------------------------------
-            int offset = textArea.viewToModel(e.getPoint());
+            var offset = textArea.viewToModel2D(e.getPoint());
             try {
                 // ------------------------------------------------------------------
                 // 1. find the selected line
