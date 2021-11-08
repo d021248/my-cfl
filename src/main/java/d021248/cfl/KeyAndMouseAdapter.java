@@ -52,7 +52,6 @@ class KeyAndMouseAdapter {
 
     private boolean isControlKeyDown = false;
     private boolean isAltKeyDown = false;
-    private boolean isScrollingOn = false;
 
     private KeyAdapter textAreaKeyAdapter = new KeyAdapter() {
         @Override
@@ -104,8 +103,6 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            // setHighlight.apply("", true);
-            isScrollingOn = textArea.isScrollingOn();
             loggerUI.toggleScrollButton.setText("start auto-scroll");
             textArea.setScrolling(false);
             super.mousePressed(e);
@@ -113,12 +110,6 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            // don't switch scrolling on again - otherwise screen will always move to the
-            // end
-            // toggleScrollButton.setText(isScrollingOn ? BT_STOP_AUTO_SCROLL :
-            // BT_START_AUTO_SCROLL);
-            // textArea.setScrolling(isScrollingOn);
-
             super.mouseReleased(e);
         }
 
