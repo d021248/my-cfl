@@ -51,7 +51,7 @@ public class Shell extends Command {
         Consumer<InputStream> toStderrConsumer = is -> toConsumer(is, this.stderrConsumer);
         this.stderrHandler(toStderrConsumer);
 
-        this.stdoutConsumer.accept(String.format(">%s", this.cmd()));
+        this.stdoutConsumer.accept(this.cmd());
         super.run();
     }
 

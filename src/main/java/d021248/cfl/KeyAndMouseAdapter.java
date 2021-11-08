@@ -120,8 +120,8 @@ class KeyAndMouseAdapter {
             }
 
             if (e.getClickCount() != 2) {
-                //loggerUI.toggleScrollButton.setText("stop auto-scroll");
-                //textArea.setScrolling(true);
+                // loggerUI.toggleScrollButton.setText("stop auto-scroll");
+                // textArea.setScrolling(true);
                 return;
             }
             if (e.isConsumed()) {
@@ -139,17 +139,19 @@ class KeyAndMouseAdapter {
                 var rowStartPos = Utilities.getRowStart(textArea, cursorPos);
                 var rowEndPos = Utilities.getRowEnd(textArea, cursorPos);
                 var rowCursorPos = cursorPos - rowStartPos;
-                //textArea.setCaretPosition(xoffset);
+                // textArea.setCaretPosition(xoffset);
                 var selectedLine = textArea.getText().substring(rowStartPos, rowEndPos);
 
                 // ------------------------------------------------------------------
                 // 2. find the selected word
                 // ------------------------------------------------------------------
                 String selectedWord = null;
+
                 var selectedWordStartPos = rowCursorPos;
                 while (selectedWordStartPos > 0 && !Character.isWhitespace(selectedLine.charAt(selectedWordStartPos))) {
                     selectedWordStartPos--;
                 }
+
                 var selectedWordEndPos = rowCursorPos;
                 while (!Character.isWhitespace(selectedLine.charAt(selectedWordEndPos))) {
                     selectedWordEndPos++;
@@ -214,9 +216,10 @@ class KeyAndMouseAdapter {
             );
             if (filterValue.startsWith(">")) {
                 if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                    var command = filterValue.substring(1).trim();
+                    var command = String.format("CMD /C %s", filterValue.substring(1).trim());
                     new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger)).start();
                     KeyAndMouseAdapter.this.applyHighlight.apply("", false);
+                    loggerUI.filterValueTextField.setText("");
                 }
             }
         }

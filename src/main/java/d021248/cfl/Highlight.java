@@ -1,6 +1,6 @@
 package d021248.cfl;
 
-public interface Highlight {
+interface Highlight {
     public void setHighlightText(String text);
 
     public String getHighlightText();

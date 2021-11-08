@@ -1,6 +1,6 @@
 package d021248.cfl;
 
-public interface Filter {
+interface Filter {
     public void setFilterText(String text);
 
     public String getFilterText();
