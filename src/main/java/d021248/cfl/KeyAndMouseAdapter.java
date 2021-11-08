@@ -106,7 +106,7 @@ class KeyAndMouseAdapter {
         public void mousePressed(MouseEvent e) {
             // setHighlight.apply("", true);
             isScrollingOn = textArea.isScrollingOn();
-            // toggleScrollButton.setText("start auto-scroll");
+            loggerUI.toggleScrollButton.setText("start auto-scroll");
             textArea.setScrolling(false);
             super.mousePressed(e);
         }
@@ -129,8 +129,8 @@ class KeyAndMouseAdapter {
             }
 
             if (e.getClickCount() != 2) {
-                loggerUI.toggleScrollButton.setText("stop auto-scroll");
-                textArea.setScrolling(true);
+                //loggerUI.toggleScrollButton.setText("stop auto-scroll");
+                //textArea.setScrolling(true);
                 return;
             }
             if (e.isConsumed()) {
@@ -140,47 +140,35 @@ class KeyAndMouseAdapter {
             // ------------------------------------------------------------------
             // find the selected word
             // ------------------------------------------------------------------
-            var offset = textArea.viewToModel2D(e.getPoint());
+            var cursorPos = textArea.viewToModel2D(e.getPoint());
             try {
                 // ------------------------------------------------------------------
                 // 1. find the selected line
                 // ------------------------------------------------------------------
-                var rowStart = Utilities.getRowStart(textArea, offset);
-                var rowEnd = Utilities.getRowEnd(textArea, offset);
-                var xoffset = offset - rowStart;
-                textArea.setCaretPosition(xoffset);
-                var selectedLine = textArea.getText().substring(rowStart, rowEnd);
+                var rowStartPos = Utilities.getRowStart(textArea, cursorPos);
+                var rowEndPos = Utilities.getRowEnd(textArea, cursorPos);
+                var rowCursorPos = cursorPos - rowStartPos;
+                //textArea.setCaretPosition(xoffset);
+                var selectedLine = textArea.getText().substring(rowStartPos, rowEndPos);
 
                 // ------------------------------------------------------------------
                 // 2. find the selected word
                 // ------------------------------------------------------------------
                 String selectedWord = null;
-                var ws = 0; // word start position
-                var we = 0; // word end position
-                for (var i = 0; i < selectedLine.length(); i++) {
-                    var c = selectedLine.charAt(i);
-
-                    if (c == ' ') { // reached end of word
-                        if (i <= xoffset) { // we have not reached the
-                            // cursor position
-                            ws = i + 1; // new word start position
-                            we = i + 1; // new word end position
-                            continue;
-                        } else { // we already have reached the cursor
-                            // position
-                            we = i; // this is the final word end position
-                            break;
-                        }
-                    } else { // not yet reached the end of a word
-                        we = we + 1; // word end --> one char more
-                    }
+                var selectedWordStartPos = rowCursorPos;
+                while (selectedWordStartPos > 0 && !Character.isWhitespace(selectedLine.charAt(selectedWordStartPos))) {
+                    selectedWordStartPos--;
+                }
+                var selectedWordEndPos = rowCursorPos;
+                while (!Character.isWhitespace(selectedLine.charAt(selectedWordEndPos))) {
+                    selectedWordEndPos++;
                 }
 
                 // ------------------------------------------------------------------
                 // 3. cut out the selected word
                 // ------------------------------------------------------------------
-                if (we >= ws) {
-                    selectedWord = selectedLine.substring(ws, we).trim();
+                if (selectedWordEndPos >= selectedWordStartPos) {
+                    selectedWord = selectedLine.substring(selectedWordStartPos, selectedWordEndPos).trim();
                 }
 
                 // ------------------------------------------------------------------
