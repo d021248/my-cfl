@@ -38,19 +38,19 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
-class CfApplicationSelector {
+class CfApplicationSelector2 {
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
     private static final String LOGO = "D021248.jpg";
 
-    private static final String TITLE = ".-=:#[ cfApplicationSelector]#:=-.";
+    private static final String TITLE = ".-=:#[ cfApplicationSelector ]#:=-.";
 
-    public static CfApplicationSelector getInstance(Logger logger, Component parent) {
-        return new CfApplicationSelector(logger, parent, TITLE);
+    public static CfApplicationSelector2 getInstance(Logger logger, Component parent) {
+        return new CfApplicationSelector2(logger, parent, TITLE);
     }
 
-    private CfApplicationSelector(Logger logger, Component parent, String title) {
+    private CfApplicationSelector2(Logger logger, Component parent, String title) {
         this.logger = logger;
         initialize(parent, title);
     }

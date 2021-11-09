@@ -124,7 +124,7 @@ class CfLoggerUI2 implements Logger {
         buttonPanel.add(cfTargetButton);
 
         JButton cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> CfApplicationSelector.getInstance(this, textArea));
+        cfAppsButton.addActionListener(e -> CfApplicationSelector2.getInstance(this, textArea));
         buttonPanel.add(cfAppsButton);
 
         JButton cfLogsButton = new JButton(BT_LOG_ALL);
