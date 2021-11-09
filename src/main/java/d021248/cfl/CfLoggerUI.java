@@ -225,7 +225,7 @@ public class CfLoggerUI implements Runnable {
                 Command.stopAll();
                 textArea.exit();
                 System.err.println(String.format("exit: %s", CfLoggerUI.this.getClass().getSimpleName()));
-                // System.exit(0);
+                System.exit(0); // will close all instances
             }
         };
         frame.addWindowListener(windowAdapter);
