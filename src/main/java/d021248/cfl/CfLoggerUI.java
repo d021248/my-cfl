@@ -112,7 +112,7 @@ public class CfLoggerUI implements Runnable {
         new Thread(() -> cfTargetButtonActionListener.actionPerformed(null)).start();
 
         var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> new Thread(() -> Cf.apps(this::logger)).start());
+        cfAppsButton.addActionListener(e -> new CfAppSelector(this));
         buttonPanel.add(cfAppsButton);
 
         var cfLogsButton = new JButton(BT_LOG_ALL);
@@ -138,12 +138,12 @@ public class CfLoggerUI implements Runnable {
         toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
         toggleScrollButton.addActionListener(
             e -> {
-                if (textArea.isScrollingOn()) {
+                if (textArea.isScrollingActive()) {
                     toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                    textArea.setScrolling(false);
+                    textArea.stopScrolling();
                 } else {
                     toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                    textArea.setScrolling(true);
+                    textArea.startScrolling();
                 }
             }
         );

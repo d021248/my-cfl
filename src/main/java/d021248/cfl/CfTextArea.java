@@ -15,7 +15,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 
-class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListener {
+class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, AdjustmentListener {
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
     private static final int MAX_LINES = 100_000;
@@ -70,7 +70,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
     @Override
     protected synchronized void paintComponent(Graphics graphics) {
         startHighlight();
-        if (isScrollingOn) {
+        if (isScrollingActive) {
             truncate();
             setCaretPosition(getDocument().getLength());
         }
@@ -140,14 +140,22 @@ class CfTextArea extends JTextArea implements Highlight, Filter, AdjustmentListe
     // ----------------------------------------------------------------------------------------
     // scrolling
     // ----------------------------------------------------------------------------------------
-    private boolean isScrollingOn = true;
+    private boolean isScrollingActive = true;
 
-    public boolean isScrollingOn() {
-        return isScrollingOn;
+    @Override
+    public boolean isScrollingActive() {
+        return isScrollingActive;
     }
 
-    public void setScrolling(boolean isScrolling) {
-        isScrollingOn = isScrolling;
+    @Override
+    public void startScrolling() {
+        isScrollingActive = true;
+        repaint();
+    }
+
+    @Override
+    public void stopScrolling() {
+        isScrollingActive = false;
         repaint();
     }
 

@@ -104,7 +104,7 @@ class KeyAndMouseAdapter {
         @Override
         public void mousePressed(MouseEvent e) {
             loggerUI.toggleScrollButton.setText("start auto-scroll");
-            textArea.setScrolling(false);
+            textArea.stopScrolling();
             super.mousePressed(e);
         }
 

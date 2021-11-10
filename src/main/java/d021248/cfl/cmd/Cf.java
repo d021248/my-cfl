@@ -3,6 +3,7 @@ package d021248.cfl.cmd;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -19,6 +20,10 @@ public class Cf {
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
     private Cf() {}
+
+    public static void run(Consumer<String> logger, String... command) {
+        Shell.cmd(command).stdoutConsumer(logger).stderrConsumer(logger).run();
+    }
 
     public static Target target(Consumer<String> logger) {
         var lines = new ArrayList<String>();
@@ -91,12 +96,32 @@ public class Cf {
     }
 
     public static void logs(String appName, Consumer<String> logger) {
-        Consumer<String> outConsumer = line ->
-            logger.accept(
-                line.isEmpty() ? "" : (line.startsWith(">") ? line : String.format("%-22s: %s", appName, line.trim()))
-            );
+        Cf.stopLogs(appName);
+        UnaryOperator<String> lineFormatter = line -> {
+            if (line.isEmpty()) {
+                return "";
+            }
+            line = line.trim();
+            if (line.startsWith(">")) {
+                return line;
+            }
+            return String.format("%-22s: %s", appName, line);
+        };
+
+        Consumer<String> outConsumer = line -> logger.accept(lineFormatter.apply(line));
         var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer).stderrConsumer(logger);
-        Command.activeList().stream().filter(c -> c.cmd().equals(logAppCommand.cmd())).forEach(Command::stop);
         new Thread(logAppCommand).start();
+    }
+
+    public static void stopLogs(String appname) {
+        Command
+            .activeList()
+            .stream()
+            .filter(c -> c.cmd().equals(String.format("cf logs %s", appname)))
+            .forEach(Command::stop);
+    }
+
+    public static void stopLogs() {
+        Cf.apps().stream().map(a -> a.name).forEach(Cf::stopLogs);
     }
 }
