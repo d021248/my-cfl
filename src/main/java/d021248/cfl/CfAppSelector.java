@@ -1,31 +1,25 @@
 package d021248.cfl;
 
-import d021248.cfl.cmd.Command;
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
-import javax.imageio.ImageIO;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JDialog;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -35,138 +29,122 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
-class CfApplicationSelector2 {
+import d021248.cfl.cmd.Cf;
+import d021248.cfl.cmd.Command;
+
+class CfAppSelector extends JComponent {
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
-    private static final String LOGO = "D021248.jpg";
-
     private static final String TITLE = ".-=:#[ cfApplicationSelector ]#:=-.";
 
-    public static CfApplicationSelector2 getInstance(Logger logger, Component parent) {
-        return new CfApplicationSelector2(logger, parent, TITLE);
+    // private final transient CfLogo logo = new CfLogo(this);
+    private final CfLoggerUI loggerUI;
+
+    public CfAppSelector(CfLoggerUI loggerUI) {
+        this.loggerUI = loggerUI;
+        initialize();
     }
 
-    private CfApplicationSelector2(Logger logger, Component parent, String title) {
-        this.logger = logger;
-        initialize(parent, title);
-    }
-
-    private final Logger logger;
     private JTable table = null;
     private BufferedImage image = null;
 
-    @SuppressWarnings("serial")
-    private void initialize(Component parent, String title) {
-        if (parent != null) {
-            // parent.setEnabled(false);
-        }
-
+    private void initialize() {
         // ------------------------------------------------------------------
         // set Look & Feel
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {}
-
-        // ------------------------------------------------------------------
-        // load Logo
-        // ------------------------------------------------------------------
-        try {
-            image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {}
+        } catch (Exception ex) {
+        }
 
         // ------------------------------------------------------------------
         // add the List
         // ------------------------------------------------------------------
-        table =
-            new JTable() {
-                public CfLogo logo = new CfLogo(this.getClass().getResource(LOGO).toString(), this);
+        table = new JTable() {
+            public CfLogo logo = new CfLogo(this);
 
-                @Override
-                protected synchronized void paintComponent(Graphics g) {
-                    setTableSelection();
-                    Graphics2D g2d = (Graphics2D) g.create();
-                    super.paintComponent(g2d);
-                    logo.paintLogo(g2d);
-                    g2d.dispose();
-                }
-            };
+            @Override
+            protected synchronized void paintComponent(Graphics g) {
+                setTableSelection();
+                var g2d = (Graphics2D) g.create();
+                super.paintComponent(g2d);
+                logo.paintLogo(g2d);
+                g2d.dispose();
+            }
+        };
 
         populateTable();
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         table.setFillsViewportHeight(true);
         table.setRowSelectionAllowed(true);
         table.setColumnSelectionAllowed(false);
-        TableColumnModel colModel = table.getColumnModel();
-        colModel.getColumn(0).setPreferredWidth(160);
-        colModel.getColumn(1).setPreferredWidth(48);
-        colModel.getColumn(2).setPreferredWidth(48);
-        colModel.getColumn(3).setPreferredWidth(48);
-        colModel.getColumn(4).setPreferredWidth(48);
-        colModel.getColumn(5).setPreferredWidth(192);
-        colModel.getColumn(5).setPreferredWidth(48);
-        table.addMouseListener(
-            new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = table.rowAtPoint(evt.getPoint());
-                    int col = table.columnAtPoint(evt.getPoint());
+        var tableColumnModel = table.getColumnModel();
+        tableColumnModel.getColumn(0).setPreferredWidth(160);
+        tableColumnModel.getColumn(1).setPreferredWidth(48);
+        tableColumnModel.getColumn(2).setPreferredWidth(48);
+        tableColumnModel.getColumn(3).setPreferredWidth(48);
+        tableColumnModel.getColumn(4).setPreferredWidth(48);
+        tableColumnModel.getColumn(5).setPreferredWidth(192);
+        tableColumnModel.getColumn(5).setPreferredWidth(48);
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                var row = table.rowAtPoint(evt.getPoint());
+                var col = table.columnAtPoint(evt.getPoint());
 
-                    if (row >= 0 && col >= 0) {
-                        TableModel tm = table.getModel();
-                        Boolean isLogged = (Boolean) tm.getValueAt(row, 6);
-                        String appName = (String) tm.getValueAt(row, 0);
+                if (row >= 0 && col >= 0) {
+                    var tableModel = table.getModel();
+                    var isLogged = (Boolean) tableModel.getValueAt(row, 6);
+                    var appName = (String) tableModel.getValueAt(row, 0);
 
-                        switch (col) {
-                            case 6:
-                                if (!isLogged) {
-                                    // TODO CfCommandLogger.unlogApplication(appName);
-                                    table.setValueAt(false, row, 6);
-                                } else {
-                                    // TODO CfCommandLogger.logApplication(logger, appName);
-                                    table.setValueAt(true, row, 6);
-                                }
-                                break;
-                            case 1:
-                                doActionCommand(appName);
-                                break;
-                            case 0:
-                                // CfEnvironment.getInstance(logger, parent.getParent(),
-                                // appName);
-
-                                getEnvironment(appName);
-
-                                // CfEnvironment.getInstance(parent, appName);
-                                break;
-                            default:
-                                break;
+                    switch (col) {
+                    case 6:
+                        if (!isLogged) {
+                            // TODO CfCommandLogger.unlogApplication(appName);
+                            table.setValueAt(false, row, 6);
+                        } else {
+                            // TODO CfCommandLogger.logApplication(logger, appName);
+                            table.setValueAt(true, row, 6);
                         }
-                        evt.consume();
-                        setTableSelection();
+                        break;
+                    case 1:
+                        doActionCommand(appName);
+                        break;
+                    case 0:
+                        // CfEnvironment.getInstance(logger, parent.getParent(),
+                        // appName);
+
+                        getEnvironment(appName);
+
+                        // CfEnvironment.getInstance(parent, appName);
+                        break;
+                    default:
+                        break;
                     }
+                    evt.consume();
+                    setTableSelection();
                 }
             }
-        );
+        });
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        JScrollPane tablePane = new JScrollPane((new JPanel(new GridLayout(1, 2))).add(table));
+        var tablePane = new JScrollPane((new JPanel(new GridLayout(1, 2))).add(table));
         tablePane.setBorder(BorderFactory.createEtchedBorder());
 
         // ------------------------------------------------------------------
         // add the buttons
         // ------------------------------------------------------------------
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        var buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        JButton logAllButton = new JButton("log all");
+        var logAllButton = new JButton("log all");
         logAllButton.addActionListener(e -> logApplicationList());
         buttonPanel.add(logAllButton);
 
-        JButton unlogAllButton = new JButton("unlog all");
+        var unlogAllButton = new JButton("unlog all");
         unlogAllButton.addActionListener(e -> unlogApplicationList());
         buttonPanel.add(unlogAllButton);
 
@@ -174,33 +152,32 @@ class CfApplicationSelector2 {
         // add the frame itself
         // ------------------------------------------------------------------
 
-        JOptionPane pane = new JOptionPane();
-        pane.setBorder(BorderFactory.createEtchedBorder());
+        var parent = loggerUI.textArea;
+        var optionPane = new JOptionPane();
+        optionPane.setBorder(BorderFactory.createEtchedBorder());
         // pane.setLocation(250, 250);
-        pane.setLayout(new BorderLayout());
-        pane.add(tablePane, BorderLayout.CENTER);
-        pane.add(buttonPanel, BorderLayout.SOUTH);
+        optionPane.setLayout(new BorderLayout());
+        optionPane.add(tablePane, BorderLayout.CENTER);
+        optionPane.add(buttonPanel, BorderLayout.SOUTH);
 
-        JDialog dialog = pane.createDialog(parent, title);
+        var dialog = optionPane.createDialog(parent, "blablabla");
         dialog.setModal(false);
         if (image != null) {
             dialog.setIconImage(image);
         }
-        dialog.addWindowListener(
-            new WindowAdapter() {
-                public void windowClosed(WindowEvent e) {
-                    if (parent != null) {
-                        parent.setEnabled(true);
-                    }
-                }
-
-                public void windowClosing(WindowEvent e) {
-                    if (parent != null) {
-                        parent.setEnabled(true);
-                    }
+        dialog.addWindowListener(new WindowAdapter() {
+            public void windowClosed(WindowEvent e) {
+                if (parent != null) {
+                    parent.setEnabled(true);
                 }
             }
-        );
+
+            public void windowClosing(WindowEvent e) {
+                if (parent != null) {
+                    parent.setEnabled(true);
+                }
+            }
+        });
         dialog.setPreferredSize(new Dimension(512, 480));
         dialog.setResizable(true);
         dialog.pack();
@@ -213,9 +190,9 @@ class CfApplicationSelector2 {
     }
 
     private void setTableSelection() {
-        TableModel model = table.getModel();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            if ((Boolean) model.getValueAt(i, 6) == true) {
+        var tableModel = table.getModel();
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            if (Boolean.TRUE.equals(tableModel.getValueAt(i, 6))) {
                 table.addRowSelectionInterval(i, i);
             } else {
                 table.removeRowSelectionInterval(i, i);
@@ -225,31 +202,21 @@ class CfApplicationSelector2 {
 
     private TableModel getTableModel() {
         String[] columnNames = { "name", "state", "instances", "memory", "disk", "urls", "logged" };
-
-        List<Application> appList = CfCommandLogger.getApplicationList(logger);
-        List<Command> commandList = Command.getCommandList();
-
-        Object[][] data = new Object[appList.size()][7];
+        var appList = Cf.apps();
+        Object[][] data = new Object[appList.size()][columnNames.length];
         for (int i = 0; i < appList.size(); i++) {
-            Application app = appList.get(i);
-            Boolean isLogged = false;
-            for (Command command : commandList) {
-                String s = command.getCommandString();
-                if (s.contains(app.getName())) {
-                    isLogged = true;
-                    break;
-                }
-            }
+            var app = appList.get(i);
+            var isLogged = Command.activeList().stream().anyMatch(c -> c.cmd().contains(app.name));
             data[i][6] = isLogged;
-            data[i][0] = app.getName();
-            data[i][1] = app.getState();
-            data[i][2] = app.getInstances();
-            data[i][3] = app.getMemory();
-            data[i][4] = app.getDisk();
-            data[i][5] = app.getUrls();
+            data[i][0] = app.name;
+            data[i][1] = app.state;
+            data[i][2] = app.instances;
+            data[i][3] = app.memory;
+            data[i][4] = app.disk;
+            data[i][5] = app.urls;
         }
 
-        TableModel tableModel = new DefaultTableModel(data, columnNames) {
+        return new DefaultTableModel(data, columnNames) {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -257,22 +224,21 @@ class CfApplicationSelector2 {
                 return getValueAt(0, columnIndex).getClass();
             }
         };
-        return tableModel;
     }
 
     private void logApplicationList() {
-        CfCommandLogger.logApplicationList(logger);
+        Cf.logs(loggerUI::logger);
         populateTable();
     }
 
     private void unlogApplicationList() {
-        CfCommandLogger.unlogApplicationList();
+        Cf.stopLogs();
         populateTable();
     }
 
     private void doActionCommand(String appName) {
-        JRadioButton[] radioButtons = new JRadioButton[5];
-        ButtonGroup group = new ButtonGroup();
+        var radioButtons = new JRadioButton[5];
+        var buttonGroup = new ButtonGroup();
 
         radioButtons[0] = new JRadioButton("debug");
         radioButtons[0].setActionCommand("cf ssh -L 8000:127.0.0.1:8000 " + appName);
@@ -285,42 +251,37 @@ class CfApplicationSelector2 {
         radioButtons[4] = new JRadioButton("restage");
         radioButtons[4].setActionCommand("cf restage " + appName);
 
-        for (int i = 0; i < radioButtons.length; i++) {
-            group.add(radioButtons[i]);
+        for (var i = 0; i < radioButtons.length; i++) {
+            buttonGroup.add(radioButtons[i]);
         }
         radioButtons[0].setSelected(true);
 
-        JButton showButton = new JButton("execute");
+        var showButton = new JButton("execute");
 
-        JPanel box = new JPanel();
-        JLabel label = new JLabel("Actions for " + appName);
+        var panel = new JPanel();
+        var label = new JLabel("Actions for " + appName);
 
-        box.setLayout(new BoxLayout(box, BoxLayout.PAGE_AXIS));
-        box.add(label);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        panel.add(label);
 
-        for (int i = 0; i < radioButtons.length; i++) {
-            box.add(radioButtons[i]);
+        for (var i = 0; i < radioButtons.length; i++) {
+            panel.add(radioButtons[i]);
         }
 
-        JOptionPane pane = new JOptionPane();
-        pane.setBorder(BorderFactory.createEtchedBorder());
-        pane.setLayout(new BorderLayout());
-        pane.add(box, BorderLayout.CENTER);
-        pane.add(showButton, BorderLayout.SOUTH);
+        var optionPane = new JOptionPane();
+        optionPane.setBorder(BorderFactory.createEtchedBorder());
+        optionPane.setLayout(new BorderLayout());
+        optionPane.add(panel, BorderLayout.CENTER);
+        optionPane.add(showButton, BorderLayout.SOUTH);
 
-        JDialog dialog = pane.createDialog(table, appName);
+        var dialog = optionPane.createDialog(table, appName);
         dialog.setModal(true);
 
-        showButton.addActionListener(
-            new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    String command = group.getSelection().getActionCommand();
-                    CfCommandLogger.logCommand(logger, command);
-                    dialog.dispose();
-                    populateTable();
-                }
-            }
-        );
+        showButton.addActionListener(e -> {
+            Cf.run(loggerUI::logger, buttonGroup.getSelection().getActionCommand());
+            dialog.dispose();
+            populateTable();
+        });
 
         if (image != null) {
             dialog.setIconImage(image);
@@ -332,18 +293,10 @@ class CfApplicationSelector2 {
     }
 
     private void getEnvironment(String appName) {
-        StringBuilder sb = new StringBuilder();
-        Logger logger = new Logger() {
-            @Override
-            public void log(String s) {
-                sb.append(s).append(CRLF);
-            }
-        };
-
         try {
-            CfCommandLogger.logCommandSync(logger, "cf env " + appName);
-            Path path = Files.write(Paths.get("./tmp.txt"), sb.toString().getBytes(), StandardOpenOption.CREATE);
-            Desktop desktop = Desktop.getDesktop();
+            var env = Cf.env(appName);
+            var path = Files.write(Paths.get("./tmp.txt"), env.getBytes(), StandardOpenOption.CREATE);
+            var desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();
         } catch (IOException e) {
