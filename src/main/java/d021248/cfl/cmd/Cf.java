@@ -13,13 +13,13 @@ public class Cf {
     // is correct, but does not work: private static final Pattern TARGET_PATTERN =
     // Pattern.compile("^\\S+:\\s+(\\S+)$");
     private static final Pattern TARGET_PATTERN = Pattern.compile(".*:(.*)");
-    private static final Pattern APPS_PATTERN = Pattern
-            .compile("^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$");
+    private static final Pattern APPS_PATTERN = Pattern.compile(
+        "^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$"
+    );
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
-    private Cf() {
-    }
+    private Cf() {}
 
     public static void run(Consumer<String> logger, String... command) {
         String[] cmd = new String[command.length + 2];
@@ -36,9 +36,14 @@ public class Cf {
         Shell.cmd("cf", "target").stdoutConsumer(lines::add).stderrConsumer(logger).run();
 
         var attrList = new ArrayList<String>();
-        lines.stream().peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
-                .map(TARGET_PATTERN::matcher).filter(Matcher::matches).map(matcher -> matcher.group(1))
-                .map(String::trim).forEach(attrList::add);
+        lines
+            .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
+            .map(TARGET_PATTERN::matcher)
+            .filter(Matcher::matches)
+            .map(matcher -> matcher.group(1))
+            .map(String::trim)
+            .forEach(attrList::add);
         return new Target(attrList.get(0), attrList.get(1), attrList.get(2), attrList.get(3), attrList.get(4));
     }
 
@@ -49,10 +54,23 @@ public class Cf {
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
         Shell.cmd("cf", "apps").stdoutConsumer(lines::add).stderrConsumer(logger).run();
-        return lines.stream().peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
-                .map(APPS_PATTERN::matcher).filter(Matcher::matches).map(matcher -> new App(matcher.group(1),
-                        matcher.group(2), matcher.group(3), matcher.group(4), matcher.group(5), matcher.group(6)))
-                .collect(Collectors.toList());
+        return lines
+            .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
+            .map(APPS_PATTERN::matcher)
+            .filter(Matcher::matches)
+            .map(
+                matcher ->
+                    new App(
+                        matcher.group(1),
+                        matcher.group(2),
+                        matcher.group(3),
+                        matcher.group(4),
+                        matcher.group(5),
+                        matcher.group(6)
+                    )
+            )
+            .collect(Collectors.toList());
     }
 
     public static List<App> apps() {
@@ -63,9 +81,12 @@ public class Cf {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
         Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).stderrConsumer(logger).run();
-        var envJson = lines.stream().peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
-                .dropWhile(line -> !line.equals("{")).takeWhile(line -> !line.equals("}"))
-                .collect(Collectors.joining(CRLF, "", postfix));
+        var envJson = lines
+            .stream()
+            .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
+            .dropWhile(line -> !line.equals("{"))
+            .takeWhile(line -> !line.equals("}"))
+            .collect(Collectors.joining(CRLF, "", postfix));
         if (envJson == null || envJson.equals(postfix)) {
             envJson = "{}";
         }
@@ -99,8 +120,11 @@ public class Cf {
     }
 
     public static void stopLogs(String appname) {
-        Command.activeList().stream().filter(c -> c.cmd().equals(String.format("cf logs %s", appname)))
-                .forEach(Command::stop);
+        Command
+            .activeList()
+            .stream()
+            .filter(c -> c.cmd().equals(String.format("cf logs %s", appname)))
+            .forEach(Command::stop);
     }
 
     public static void stopLogs() {

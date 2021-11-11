@@ -1,5 +1,7 @@
 package d021248.cfl;
 
+import d021248.cfl.cmd.Cf;
+import d021248.cfl.cmd.Command;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -14,7 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -30,9 +31,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
-import d021248.cfl.cmd.Cf;
-import d021248.cfl.cmd.Command;
 
 class CfAppSelector extends JComponent {
 
@@ -57,24 +55,24 @@ class CfAppSelector extends JComponent {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {
-        }
+        } catch (Exception ex) {}
 
         // ------------------------------------------------------------------
         // add the List
         // ------------------------------------------------------------------
-        table = new JTable() {
-            public CfLogo logo = new CfLogo(this);
+        table =
+            new JTable() {
+                public CfLogo logo = new CfLogo(this);
 
-            @Override
-            protected synchronized void paintComponent(Graphics g) {
-                setTableSelection();
-                var g2d = (Graphics2D) g.create();
-                super.paintComponent(g2d);
-                logo.paintLogo(g2d);
-                g2d.dispose();
-            }
-        };
+                @Override
+                protected synchronized void paintComponent(Graphics g) {
+                    setTableSelection();
+                    var g2d = (Graphics2D) g.create();
+                    super.paintComponent(g2d);
+                    logo.paintLogo(g2d);
+                    g2d.dispose();
+                }
+            };
 
         populateTable();
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -89,46 +87,48 @@ class CfAppSelector extends JComponent {
         tableColumnModel.getColumn(4).setPreferredWidth(48);
         tableColumnModel.getColumn(5).setPreferredWidth(192);
         tableColumnModel.getColumn(5).setPreferredWidth(48);
-        table.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                var row = table.rowAtPoint(evt.getPoint());
-                var col = table.columnAtPoint(evt.getPoint());
+        table.addMouseListener(
+            new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    var row = table.rowAtPoint(evt.getPoint());
+                    var col = table.columnAtPoint(evt.getPoint());
 
-                if (row >= 0 && col >= 0) {
-                    var tableModel = table.getModel();
-                    var isLogged = (Boolean) tableModel.getValueAt(row, 6);
-                    var appName = (String) tableModel.getValueAt(row, 0);
+                    if (row >= 0 && col >= 0) {
+                        var tableModel = table.getModel();
+                        var isLogged = (Boolean) tableModel.getValueAt(row, 6);
+                        var appName = (String) tableModel.getValueAt(row, 0);
 
-                    switch (col) {
-                    case 6:
-                        if (!isLogged) {
-                            // TODO CfCommandLogger.unlogApplication(appName);
-                            table.setValueAt(false, row, 6);
-                        } else {
-                            // TODO CfCommandLogger.logApplication(logger, appName);
-                            table.setValueAt(true, row, 6);
+                        switch (col) {
+                            case 6:
+                                if (!isLogged) {
+                                    // TODO CfCommandLogger.unlogApplication(appName);
+                                    table.setValueAt(false, row, 6);
+                                } else {
+                                    // TODO CfCommandLogger.logApplication(logger, appName);
+                                    table.setValueAt(true, row, 6);
+                                }
+                                break;
+                            case 1:
+                                doActionCommand(appName);
+                                break;
+                            case 0:
+                                // CfEnvironment.getInstance(logger, parent.getParent(),
+                                // appName);
+
+                                getEnvironment(appName);
+
+                                // CfEnvironment.getInstance(parent, appName);
+                                break;
+                            default:
+                                break;
                         }
-                        break;
-                    case 1:
-                        doActionCommand(appName);
-                        break;
-                    case 0:
-                        // CfEnvironment.getInstance(logger, parent.getParent(),
-                        // appName);
-
-                        getEnvironment(appName);
-
-                        // CfEnvironment.getInstance(parent, appName);
-                        break;
-                    default:
-                        break;
+                        evt.consume();
+                        setTableSelection();
                     }
-                    evt.consume();
-                    setTableSelection();
                 }
             }
-        });
+        );
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         var tablePane = new JScrollPane((new JPanel(new GridLayout(1, 2))).add(table));
@@ -165,19 +165,21 @@ class CfAppSelector extends JComponent {
         if (image != null) {
             dialog.setIconImage(image);
         }
-        dialog.addWindowListener(new WindowAdapter() {
-            public void windowClosed(WindowEvent e) {
-                if (parent != null) {
-                    parent.setEnabled(true);
+        dialog.addWindowListener(
+            new WindowAdapter() {
+                public void windowClosed(WindowEvent e) {
+                    if (parent != null) {
+                        parent.setEnabled(true);
+                    }
                 }
-            }
 
-            public void windowClosing(WindowEvent e) {
-                if (parent != null) {
-                    parent.setEnabled(true);
+                public void windowClosing(WindowEvent e) {
+                    if (parent != null) {
+                        parent.setEnabled(true);
+                    }
                 }
             }
-        });
+        );
         dialog.setPreferredSize(new Dimension(512, 480));
         dialog.setResizable(true);
         dialog.pack();
@@ -277,11 +279,13 @@ class CfAppSelector extends JComponent {
         var dialog = optionPane.createDialog(table, appName);
         dialog.setModal(true);
 
-        showButton.addActionListener(e -> {
-            Cf.run(loggerUI::logger, buttonGroup.getSelection().getActionCommand());
-            dialog.dispose();
-            populateTable();
-        });
+        showButton.addActionListener(
+            e -> {
+                Cf.run(loggerUI::logger, buttonGroup.getSelection().getActionCommand());
+                dialog.dispose();
+                populateTable();
+            }
+        );
 
         if (image != null) {
             dialog.setIconImage(image);
