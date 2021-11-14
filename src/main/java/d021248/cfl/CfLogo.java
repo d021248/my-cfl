@@ -29,7 +29,7 @@ public class CfLogo implements Runnable {
     public CfLogo(JComponent component, String imageURL) {
         this.image = readImage(imageURL);
         this.component = component;
-        this.isExitRequested = true;
+        this.isExitRequested = false;
     }
 
     protected BufferedImage readImage(String imageURL) {
@@ -49,6 +49,7 @@ public class CfLogo implements Runnable {
         g2d.setComposite(composite);
     }
 
+    @Override
     public void run() {
         var delta = (MAX - MIN) / STEPS;
         while (!isExitRequested) {
@@ -71,6 +72,10 @@ public class CfLogo implements Runnable {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    public void start() {
+        new Thread(this).start();
     }
 
     public void exit() {

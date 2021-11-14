@@ -28,7 +28,7 @@ class KeyAndMouseAdapter {
         this.textArea.addMouseListener(textAreaMouseAdapter);
     }
 
-    private BiFunction<String, Boolean, String> applyHighlight = (filterValue, applyFilter) -> {
+    private BiFunction<String, Boolean, String> applyHighlight = (filterValue, isUpdateTextFieldRequested) -> {
         if (filterValue == null || filterValue.isBlank()) {
             textArea.stopHighlight();
         } else {
@@ -36,7 +36,7 @@ class KeyAndMouseAdapter {
             textArea.startHighlight();
         }
 
-        if (Boolean.TRUE.equals(applyFilter)) {
+        if (Boolean.TRUE.equals(isUpdateTextFieldRequested)) {
             loggerUI.filterValueTextField.setText(filterValue);
         }
 
@@ -62,8 +62,8 @@ class KeyAndMouseAdapter {
 
         @Override
         public void keyReleased(KeyEvent e) {
-            isControlKeyDown = e.isControlDown();
             isAltKeyDown = e.isAltDown();
+            isControlKeyDown = e.isControlDown();
         }
     };
 
@@ -120,8 +120,6 @@ class KeyAndMouseAdapter {
             }
 
             if (e.getClickCount() != 2) {
-                // loggerUI.toggleScrollButton.setText("stop auto-scroll");
-                // textArea.setScrolling(true);
                 return;
             }
             if (e.isConsumed()) {
@@ -139,7 +137,7 @@ class KeyAndMouseAdapter {
                 var rowStartPos = Utilities.getRowStart(textArea, cursorPos);
                 var rowEndPos = Utilities.getRowEnd(textArea, cursorPos);
                 var rowCursorPos = cursorPos - rowStartPos;
-                // textArea.setCaretPosition(xoffset);
+
                 var selectedLine = textArea.getText().substring(rowStartPos, rowEndPos);
 
                 // ------------------------------------------------------------------

@@ -17,29 +17,29 @@ import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 
 class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, AdjustmentListener {
 
-    private static final String CRLF = System.getProperty("line.separator", "\n");
-    private static final int MAX_LINES = 100_000;
+    private static final String CRLF = String.format("%n");
+    private static final int MAX_LINES = 2048;
     private static final int MIN_FONT_SIZE = 4;
     private static final int MAX_FONT_SIZE = 32;
     private static final List<String> FONT_NAMES = List.of("Arial", "Courier", "Helvetica", "Monospaced", "Plain");
 
     private static final long serialVersionUID = 1L;
-    private final transient DefaultHighlightPainter painter = new DefaultHighlighter.DefaultHighlightPainter(
-        new Color(128, 196, 255)
-    );
-
     private int fontSize = 11;
     private int fontNameIndex = 3;
-
-    private final List<String> linesBuffer = new ArrayList<>();
-
-    private final transient CfLogo logo = new CfLogo(this);
+    private final transient DefaultHighlightPainter painter;
+    private final transient CfLogo logo;
+    private final List<String> linesBuffer;
 
     public CfTextArea() {
         super();
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
-        new Thread(logo).start();
+
+        this.painter = new DefaultHighlighter.DefaultHighlightPainter(new Color(128, 196, 255));
+        this.linesBuffer = new ArrayList<>();
+
+        this.logo = new CfLogo(this);
+        this.logo.start();
     }
 
     // ----------------------------------------------------------------------------------------
@@ -105,6 +105,21 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         var line = text.endsWith(CRLF) ? text : String.format("%s%n", text);
         linesBuffer.add(line);
 
+        if (isPrettyLoggingActive) {
+            var matcher = prettyLoggingPattern.matcher(line);
+            if (matcher.find()) {
+                var tmp = String.format(
+                    "%-20s | %s | %s | %s%n",
+                    matcher.group(1),
+                    matcher.group(2),
+                    matcher.group(3),
+                    matcher.group(4)
+                );
+
+                line = tmp;
+            }
+        }
+
         if (isHighlightActive && isFilterActive) {
             try {
                 if (highlightPattern.matcher(line).find()) {
@@ -136,6 +151,14 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     public void adjustmentValueChanged(AdjustmentEvent e) {
         repaint();
     }
+
+    // ----------------------------------------------------------------------------------------
+    // pretty logging
+    // ----------------------------------------------------------------------------------------
+    private boolean isPrettyLoggingActive = false;
+    private Pattern prettyLoggingPattern = Pattern// (\\[.*\\].* // .compile("^(.*) (d{4}-d{2}-d{2})T(d{2}:d{2}:d{2}\\.d{2})\\+d{4}
+    // --- \\[.*\\]) (.*)$");
+    .compile("(\\S+)\\s+.*\\s+\\[.*\\]\\s+OUT\\s+(.*)\\s+(.*)\\s{2}.*\\[.*\\]\\s+(.*)");
 
     // ----------------------------------------------------------------------------------------
     // scrolling

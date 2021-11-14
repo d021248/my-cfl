@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -34,20 +35,18 @@ import javax.swing.table.TableModel;
 
 class CfAppSelector extends JComponent {
 
-    private static final String CRLF = System.getProperty("line.separator", "\n");
+    private static final String TITLE = ".-=:#[ app selector ]#:=-.";
+    private static final String LOGO = "D021248.jpg";
 
-    private static final String TITLE = ".-=:#[ cfApplicationSelector ]#:=-.";
-
-    // private final transient CfLogo logo = new CfLogo(this);
-    private final CfLoggerUI loggerUI;
+    private final transient CfLoggerUI loggerUI;
+    private transient BufferedImage image = null;
 
     public CfAppSelector(CfLoggerUI loggerUI) {
         this.loggerUI = loggerUI;
         initialize();
     }
 
-    private JTable table = null;
-    private BufferedImage image = null;
+    private JTable cfTable;
 
     private void initialize() {
         // ------------------------------------------------------------------
@@ -55,24 +54,33 @@ class CfAppSelector extends JComponent {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ex) {}
+        } catch (Exception e) {}
+
+        // ------------------------------------------------------------------
+        // load Logo
+        // ------------------------------------------------------------------
+        try {
+            image = ImageIO.read(this.getClass().getResource(LOGO));
+        } catch (Exception e) {}
 
         // ------------------------------------------------------------------
         // add the List
         // ------------------------------------------------------------------
-        table =
-            new JTable() {
-                public CfLogo logo = new CfLogo(this);
+        var table = new JTable() {
+            public final transient CfLogo logo = new CfLogo(this);
 
-                @Override
-                protected synchronized void paintComponent(Graphics g) {
-                    setTableSelection();
-                    var g2d = (Graphics2D) g.create();
-                    super.paintComponent(g2d);
-                    logo.paintLogo(g2d);
-                    g2d.dispose();
-                }
-            };
+            @Override
+            protected synchronized void paintComponent(Graphics g) {
+                setTableSelection();
+                var g2d = (Graphics2D) g.create();
+                super.paintComponent(g2d);
+                logo.paintLogo(g2d);
+                g2d.dispose();
+            }
+        };
+
+        this.cfTable = table;
+        table.logo.start();
 
         populateTable();
         table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -101,11 +109,11 @@ class CfAppSelector extends JComponent {
 
                         switch (col) {
                             case 6:
-                                if (!isLogged) {
-                                    // TODO CfCommandLogger.unlogApplication(appName);
+                                if (Boolean.FALSE.equals(isLogged)) {
+                                    Cf.stopLogs(appName);
                                     table.setValueAt(false, row, 6);
                                 } else {
-                                    // TODO CfCommandLogger.logApplication(logger, appName);
+                                    Cf.logs(appName, loggerUI::logger);
                                     table.setValueAt(true, row, 6);
                                 }
                                 break;
@@ -113,12 +121,7 @@ class CfAppSelector extends JComponent {
                                 doActionCommand(appName);
                                 break;
                             case 0:
-                                // CfEnvironment.getInstance(logger, parent.getParent(),
-                                // appName);
-
                                 getEnvironment(appName);
-
-                                // CfEnvironment.getInstance(parent, appName);
                                 break;
                             default:
                                 break;
@@ -155,24 +158,26 @@ class CfAppSelector extends JComponent {
         var parent = loggerUI.textArea;
         var optionPane = new JOptionPane();
         optionPane.setBorder(BorderFactory.createEtchedBorder());
-        // pane.setLocation(250, 250);
+
         optionPane.setLayout(new BorderLayout());
         optionPane.add(tablePane, BorderLayout.CENTER);
         optionPane.add(buttonPanel, BorderLayout.SOUTH);
 
-        var dialog = optionPane.createDialog(parent, "blablabla");
+        var dialog = optionPane.createDialog(parent, TITLE);
         dialog.setModal(false);
         if (image != null) {
             dialog.setIconImage(image);
         }
         dialog.addWindowListener(
             new WindowAdapter() {
+                @Override
                 public void windowClosed(WindowEvent e) {
                     if (parent != null) {
                         parent.setEnabled(true);
                     }
                 }
 
+                @Override
                 public void windowClosing(WindowEvent e) {
                     if (parent != null) {
                         parent.setEnabled(true);
@@ -187,24 +192,24 @@ class CfAppSelector extends JComponent {
     }
 
     private void populateTable() {
-        table.setModel(getTableModel());
+        cfTable.setModel(getTableModel());
         setTableSelection();
     }
 
     private void setTableSelection() {
-        var tableModel = table.getModel();
+        var tableModel = cfTable.getModel();
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             if (Boolean.TRUE.equals(tableModel.getValueAt(i, 6))) {
-                table.addRowSelectionInterval(i, i);
+                cfTable.addRowSelectionInterval(i, i);
             } else {
-                table.removeRowSelectionInterval(i, i);
+                cfTable.removeRowSelectionInterval(i, i);
             }
         }
     }
 
     private TableModel getTableModel() {
-        String[] columnNames = { "name", "state", "instances", "memory", "disk", "urls", "logged" };
         var appList = Cf.apps();
+        String[] columnNames = { "name", "state", "instances", "memory", "disk", "urls", "logged" };
         Object[][] data = new Object[appList.size()][columnNames.length];
         for (int i = 0; i < appList.size(); i++) {
             var app = appList.get(i);
@@ -224,6 +229,12 @@ class CfAppSelector extends JComponent {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 return getValueAt(0, columnIndex).getClass();
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // all cells false
+                return column == 6;
             }
         };
     }
@@ -276,7 +287,7 @@ class CfAppSelector extends JComponent {
         optionPane.add(panel, BorderLayout.CENTER);
         optionPane.add(showButton, BorderLayout.SOUTH);
 
-        var dialog = optionPane.createDialog(table, appName);
+        var dialog = optionPane.createDialog(cfTable, appName);
         dialog.setModal(true);
 
         showButton.addActionListener(
@@ -290,7 +301,7 @@ class CfAppSelector extends JComponent {
         if (image != null) {
             dialog.setIconImage(image);
         }
-        // dialog.setPreferredSize(new Dimension(512, 480));
+
         dialog.setResizable(false);
         dialog.pack();
         dialog.setVisible(true);

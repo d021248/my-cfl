@@ -3,7 +3,6 @@ package d021248.cfl.cmd;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,19 +102,10 @@ public class Cf {
 
     public static void logs(String appName, Consumer<String> logger) {
         Cf.stopLogs(appName);
-        UnaryOperator<String> lineFormatter = line -> {
-            if (line.isEmpty()) {
-                return "";
-            }
-            line = line.trim();
-            if (line.startsWith(">")) {
-                return line;
-            }
-            return String.format("%-22s: %s", appName, line);
-        };
-
-        Consumer<String> outConsumer = line -> logger.accept(lineFormatter.apply(line));
-        var logAppCommand = Shell.cmd("cf", "logs", appName).stdoutConsumer(outConsumer).stderrConsumer(logger);
+        var logAppCommand = Shell
+            .cmd("cf", "logs", appName)
+            .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)))
+            .stderrConsumer(logger);
         new Thread(logAppCommand).start();
     }
 
