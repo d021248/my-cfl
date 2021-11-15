@@ -47,7 +47,7 @@
                       <mainClass>d021248.cfl.CfLogger</mainClass>
                   </manifest>
               </archive>
-              <finalName>cfLogger.jar</finalName>  
+              <finalName>cfLogger</finalName>  
           </configuration>          
         </plugin>
         <plugin>
