@@ -27,12 +27,12 @@ public class Cf {
         for (int i = 0; i < command.length; i++) {
             cmd[i + 2] = command[i];
         }
-        new Thread(Shell.cmd(cmd).stdoutConsumer(logger).stderrConsumer(logger)).start();
+        new Thread(Shell.cmd(cmd).stdoutConsumer(logger)).start();
     }
 
     public static Target target(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "target").stdoutConsumer(lines::add).stderrConsumer(logger).run();
+        Shell.cmd("cf", "target").stdoutConsumer(lines::add).run();
 
         var attrList = new ArrayList<String>();
         lines
@@ -52,7 +52,7 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).stderrConsumer(logger).run();
+        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
         return lines
             .stream()
             .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
@@ -79,7 +79,7 @@ public class Cf {
     public static String env(String app, Consumer<String> logger) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).stderrConsumer(logger).run();
+        Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
         var envJson = lines
             .stream()
             .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
@@ -104,8 +104,7 @@ public class Cf {
         Cf.stopLogs(appName);
         var logAppCommand = Shell
             .cmd("cf", "logs", appName)
-            .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)))
-            .stderrConsumer(logger);
+            .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)));
         new Thread(logAppCommand).start();
     }
 

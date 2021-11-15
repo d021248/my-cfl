@@ -156,8 +156,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     // pretty logging
     // ----------------------------------------------------------------------------------------
     private boolean isPrettyLoggingActive = false;
-    private Pattern prettyLoggingPattern = Pattern// (\\[.*\\].* // .compile("^(.*) (d{4}-d{2}-d{2})T(d{2}:d{2}:d{2}\\.d{2})\\+d{4}
-    // --- \\[.*\\]) (.*)$");
+    private Pattern prettyLoggingPattern = Pattern// --- \\[.*\\]) (.*)$"); // (\\[.*\\].* // .compile("^(.*) (d{4}-d{2}-d{2})T(d{2}:d{2}:d{2}\\.d{2})\\+d{4}
     .compile("(\\S+)\\s+.*\\s+\\[.*\\]\\s+OUT\\s+(.*)\\s+(.*)\\s{2}.*\\[.*\\]\\s+(.*)");
 
     // ----------------------------------------------------------------------------------------

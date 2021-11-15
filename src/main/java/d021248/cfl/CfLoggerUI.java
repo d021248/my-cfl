@@ -253,7 +253,7 @@ public class CfLoggerUI implements Runnable {
     }
 
     public void logger(String text) {
-        System.err.println(text);
+        // System.err.println(text);
         textArea.append(text);
     }
 }

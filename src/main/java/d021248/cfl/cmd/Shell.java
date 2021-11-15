@@ -10,8 +10,8 @@ import java.util.function.Consumer;
 
 public class Shell extends Command {
 
-    private Consumer<String> stdoutConsumer = null;
-    private Consumer<String> stderrConsumer = null;
+    private Consumer<String> stdoutConsumer = s -> {};
+    private Consumer<String> stderrConsumer = s -> {};
     private InputStream stdin = null;
 
     public Shell(String... cmd) {
@@ -43,11 +43,9 @@ public class Shell extends Command {
         Consumer<OutputStream> toStdinConsumer = os -> this.transferTo(this.stdin, os);
         this.stdinHandler(toStdinConsumer);
 
-        this.stdoutConsumer = Optional.ofNullable(this.stdoutConsumer).orElse(System.out::println);
         Consumer<InputStream> toStdoutConsumer = is -> toConsumer(is, this.stdoutConsumer);
         this.stdoutHandler(toStdoutConsumer);
 
-        this.stderrConsumer = Optional.ofNullable(this.stderrConsumer).orElse(System.err::println);
         Consumer<InputStream> toStderrConsumer = is -> toConsumer(is, this.stderrConsumer);
         this.stderrHandler(toStderrConsumer);
 
