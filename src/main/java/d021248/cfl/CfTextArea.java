@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -22,13 +21,16 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     private static final int MIN_FONT_SIZE = 4;
     private static final int MAX_FONT_SIZE = 32;
     private static final List<String> FONT_NAMES = List.of("Arial", "Courier", "Helvetica", "Monospaced", "Plain");
+    private static final String EMPTY_LINE = CRLF;
 
     private static final long serialVersionUID = 1L;
     private int fontSize = 11;
     private int fontNameIndex = 3;
     private final transient DefaultHighlightPainter painter;
     private final transient CfLogo logo;
-    private final List<String> linesBuffer;
+    private final String[] tmpLinesBuffer;
+    private final String[] linesBuffer;
+    private int linesBufferIndex;
 
     public CfTextArea() {
         super();
@@ -36,7 +38,9 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
 
         this.painter = new DefaultHighlighter.DefaultHighlightPainter(new Color(128, 196, 255));
-        this.linesBuffer = new ArrayList<>();
+        this.tmpLinesBuffer = new String[MAX_LINES];
+        this.linesBuffer = new String[MAX_LINES];
+        this.linesBufferIndex = 0;
 
         this.logo = new CfLogo(this);
         this.logo.start();
@@ -103,19 +107,13 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         }
 
         var line = text.endsWith(CRLF) ? text : String.format("%s%n", text);
-        linesBuffer.add(line);
+        linesBuffer[linesBufferIndex] = line;
+        linesBufferIndex = (linesBufferIndex + 1) % MAX_LINES;
 
         if (isPrettyLoggingActive) {
             var matcher = prettyLoggingPattern.matcher(line);
             if (matcher.find()) {
-                var tmp = String.format(
-                    "%-20s | %s | %s | %s%n",
-                    matcher.group(1),
-                    matcher.group(2),
-                    matcher.group(3),
-                    matcher.group(4)
-                );
-
+                var tmp = String.format("%-20s | %s | %s%n", matcher.group(1), matcher.group(2), matcher.group(4));
                 line = tmp;
             }
         }
@@ -136,15 +134,22 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     }
 
     public void clear() {
-        linesBuffer.clear();
         setText("");
+        for (int i = 0; i < MAX_LINES; i++) {
+            this.linesBuffer[i] = EMPTY_LINE;
+        }
+        linesBufferIndex = 0;
     }
 
     private void refresh() {
-        var tmp = new ArrayList<String>(linesBuffer);
-        linesBuffer.clear();
         setText("");
-        tmp.stream().forEach(this::append);
+        String line;
+        for (int i = 0; i < MAX_LINES; i++) {
+            line = this.linesBuffer[i];
+            this.linesBuffer[i] = EMPTY_LINE;
+            this.tmpLinesBuffer[i] = line;
+            this.append(line);
+        }
     }
 
     @Override
@@ -156,8 +161,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     // pretty logging
     // ----------------------------------------------------------------------------------------
     private boolean isPrettyLoggingActive = false;
-    private Pattern prettyLoggingPattern = Pattern// --- \\[.*\\]) (.*)$"); // (\\[.*\\].* // .compile("^(.*) (d{4}-d{2}-d{2})T(d{2}:d{2}:d{2}\\.d{2})\\+d{4}
-    .compile("(\\S+)\\s+.*\\s+\\[.*\\]\\s+OUT\\s+(.*)\\s+(.*)\\s{2}.*\\[.*\\]\\s+(.*)");
+    private Pattern prettyLoggingPattern = Pattern.compile("(.*) (.*) \\[(.*)\\] (.*)");
 
     // ----------------------------------------------------------------------------------------
     // scrolling
