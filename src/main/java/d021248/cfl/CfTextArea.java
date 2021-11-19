@@ -73,7 +73,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
 
     @Override
     protected synchronized void paintComponent(Graphics graphics) {
-        startHighlight();
+        applyHighlight();
         if (isScrollingActive) {
             truncate();
             setCaretPosition(getDocument().getLength());
@@ -93,7 +93,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         if (numLinesToTruncate > 0) {
             try {
                 var posOfLastLineToTrunk = this.getLineEndOffset(numLinesToTruncate - 1);
-                this.replaceRange("", 0, posOfLastLineToTrunk);
+                this.replaceRange("#####################", 0, posOfLastLineToTrunk);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
@@ -245,7 +245,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     }
 
     @Override
-    public void startHighlight() {
+    public void applyHighlight() {
         var highliter = getHighlighter();
         highliter.removeAllHighlights();
         if (!isHighlightActive) {
@@ -262,7 +262,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     }
 
     @Override
-    public void stopHighlight() {
+    public void removeHighlight() {
         getHighlighter().removeAllHighlights();
         isHighlightActive = false;
         refresh();

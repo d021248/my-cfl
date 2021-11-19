@@ -5,9 +5,9 @@ interface Highlight {
 
     public String getHighlightText();
 
-    public void startHighlight();
+    public void applyHighlight();
 
-    public void stopHighlight();
+    public void removeHighlight();
 
     public boolean isHighlightActive();
 }

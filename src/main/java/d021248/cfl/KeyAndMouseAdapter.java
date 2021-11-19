@@ -30,10 +30,10 @@ class KeyAndMouseAdapter {
 
     private BiFunction<String, Boolean, String> applyHighlight = (filterValue, isUpdateTextFieldRequested) -> {
         if (filterValue == null || filterValue.isBlank()) {
-            textArea.stopHighlight();
+            textArea.removeHighlight();
         } else {
             textArea.setHighlightText(filterValue);
-            textArea.startHighlight();
+            textArea.applyHighlight();
         }
 
         if (Boolean.TRUE.equals(isUpdateTextFieldRequested)) {
