@@ -42,8 +42,7 @@ class KeyAndMouseAdapter {
 
         this.loggerUI.toggleFilterButton.setEnabled(!this.loggerUI.filterValueTextField.getText().isEmpty());
         this.loggerUI.toggleFilterButton.setText(
-                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF
-            );
+                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF);
 
         // copy to clipboard
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);
@@ -75,6 +74,8 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mouseDragged(MouseEvent e) {
+            textArea.stopScrolling(); // TODO: update Button
+
             if (textArea.isFilterActive()) {
                 return;
             }
@@ -89,7 +90,7 @@ class KeyAndMouseAdapter {
             }
 
             textArea.setSelectionStart(start < end ? start : end);
-            textArea.setSelectionEnd(start > end ? start : end);
+            textArea.setSelectionEnd(start < end ? end : start);
             textArea.setHighlightText(textArea.getSelectedText());
             applyHighlight.apply(textArea.getHighlightText(), true);
         }
@@ -103,6 +104,9 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mousePressed(MouseEvent e) {
+            textArea.stopScrolling(); // TODO: update Button
+            textArea.removeHighlight();
+            isDraggedOn = !isDraggedOn;
             loggerUI.toggleScrollButton.setText("start auto-scroll");
             textArea.stopScrolling();
             super.mousePressed(e);
@@ -115,6 +119,7 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mouseClicked(MouseEvent e) {
+            textArea.stopScrolling(); // TODO: update Button
             if (e.getButton() != MouseEvent.BUTTON1) {
                 return;
             }
@@ -171,7 +176,8 @@ class KeyAndMouseAdapter {
                 } else {
                     applyHighlight.apply(selectedWord, true);
                 }
-            } catch (BadLocationException e1) {}
+            } catch (BadLocationException e1) {
+            }
         }
 
         @Override
@@ -195,11 +201,8 @@ class KeyAndMouseAdapter {
     private KeyAdapter cfLoggerUIKeyAdapter = new KeyAdapter() {
         @Override
         public void keyTyped(KeyEvent keyEvent) {
-            var filterValue = String.format(
-                "%s%s",
-                loggerUI.filterValueTextField.getText(),
-                toPrintableChar(keyEvent.getKeyChar())
-            );
+            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
+                    toPrintableChar(keyEvent.getKeyChar()));
             if (!filterValue.startsWith(">")) {
                 KeyAndMouseAdapter.this.applyHighlight.apply(filterValue, false);
             }
@@ -207,11 +210,8 @@ class KeyAndMouseAdapter {
 
         @Override
         public void keyPressed(KeyEvent keyEvent) {
-            var filterValue = String.format(
-                "%s%s",
-                loggerUI.filterValueTextField.getText(),
-                toPrintableChar(keyEvent.getKeyChar())
-            );
+            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
+                    toPrintableChar(keyEvent.getKeyChar()));
             if (filterValue.startsWith(">")) {
                 if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                     var command = String.format("CMD /C %s", filterValue.substring(1).trim());
@@ -228,12 +228,8 @@ class KeyAndMouseAdapter {
 
         public boolean isPrintableChar(char c) {
             var block = Character.UnicodeBlock.of(c);
-            return (
-                (!Character.isISOControl(c)) &&
-                c != KeyEvent.CHAR_UNDEFINED &&
-                block != null &&
-                block != Character.UnicodeBlock.SPECIALS
-            );
+            return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
+                    && block != Character.UnicodeBlock.SPECIALS);
         }
     };
 }

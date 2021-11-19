@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
 import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 
@@ -44,6 +45,9 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
 
         this.logo = new CfLogo(this);
         this.logo.start();
+
+        var caret = (DefaultCaret) this.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
     }
 
     // ----------------------------------------------------------------------------------------
@@ -93,7 +97,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         if (numLinesToTruncate > 0) {
             try {
                 var posOfLastLineToTrunk = this.getLineEndOffset(numLinesToTruncate - 1);
-                this.replaceRange("#####################", 0, posOfLastLineToTrunk);
+                this.replaceRange("", 0, posOfLastLineToTrunk);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
@@ -148,7 +152,9 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
             line = this.linesBuffer[i];
             this.linesBuffer[i] = EMPTY_LINE;
             this.tmpLinesBuffer[i] = line;
-            this.append(line);
+        }
+        for (int i = 0; i < MAX_LINES; i++) {
+            this.append(this.tmpLinesBuffer[i]);
         }
     }
 
