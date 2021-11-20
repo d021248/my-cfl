@@ -81,6 +81,8 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         if (isScrollingActive) {
             truncate();
             setCaretPosition(getDocument().getLength());
+        } else {
+            setCaretPosition(caretPosition);
         }
 
         var graphics2d = (Graphics2D) graphics.create();
@@ -189,6 +191,12 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     public void stopScrolling() {
         isScrollingActive = false;
         repaint();
+    }
+
+    private int caretPosition = 0;
+
+    public void setPos(int caretPosition) {
+        this.caretPosition = caretPosition;
     }
 
     // ----------------------------------------------------------------------------------------
