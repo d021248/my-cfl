@@ -84,6 +84,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         } else {
             setCaretPosition(caretPosition);
         }
+        caretPosition = this.getCaretPosition();
 
         var graphics2d = (Graphics2D) graphics.create();
         graphics2d.setColor(getBackground());
