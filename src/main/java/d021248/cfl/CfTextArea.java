@@ -137,7 +137,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
             super.append(line);
         }
 
-        repaint();
+        // repaint();
     }
 
     public void clear() {
@@ -163,7 +163,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
 
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
-        repaint();
+        // repaint();
     }
 
     // ----------------------------------------------------------------------------------------
@@ -185,13 +185,13 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     @Override
     public void startScrolling() {
         isScrollingActive = true;
-        repaint();
+        // repaint();
     }
 
     @Override
     public void stopScrolling() {
         isScrollingActive = false;
-        repaint();
+        // repaint();
     }
 
     private int caretPosition = 0;

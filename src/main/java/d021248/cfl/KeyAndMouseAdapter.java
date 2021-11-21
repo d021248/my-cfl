@@ -90,50 +90,40 @@ class KeyAndMouseAdapter {
                 end = pos;
             }
 
-            textArea.setCaretPosition(pos);
+            // textArea.setCaretPosition(pos);
             textArea.setSelectionStart(start < end ? start : end);
             textArea.setSelectionEnd(start < end ? end : start);
             textArea.setHighlightText(textArea.getSelectedText());
             applyHighlight.apply(textArea.getHighlightText(), true);
-            textArea.repaint();
+            // textArea.repaint();
         }
 
         @Override
         public void mouseMoved(MouseEvent e) {
-            pos = textArea.viewToModel2D(e.getPoint());
             if (isDraggedOn) {
                 isDraggedOn = false;
             }
-            textArea.repaint();
+            // textArea.repaint();
         }
 
         @Override
         public void mousePressed(MouseEvent e) {
-            pos = textArea.viewToModel2D(e.getPoint());
-            textArea.setPos(pos);
-
-            textArea.stopScrolling(); // TODO: update Button
             textArea.removeHighlight();
-            // isDraggedOn = !isDraggedOn;
             loggerUI.toggleScrollButton.setText("start auto-scroll");
             textArea.stopScrolling();
             super.mousePressed(e);
-            textArea.repaint();
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            pos = textArea.viewToModel2D(e.getPoint());
-            textArea.setPos(pos);
             super.mouseReleased(e);
-            textArea.repaint();
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
             pos = textArea.viewToModel2D(e.getPoint());
-            textArea.setPos(pos);
             textArea.stopScrolling(); // TODO: update Button
+
             if (e.getButton() != MouseEvent.BUTTON1) {
                 return;
             }
@@ -192,13 +182,10 @@ class KeyAndMouseAdapter {
                 }
             } catch (BadLocationException e1) {
             }
-            textArea.repaint();
         }
 
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            pos = textArea.viewToModel2D(e.getPoint());
-            textArea.setPos(pos);
             if (isControlKeyDown) {
                 if (e.getWheelRotation() < 0) {
                     textArea.decreaseFontSize();
@@ -212,7 +199,6 @@ class KeyAndMouseAdapter {
             }
 
             super.mouseWheelMoved(e);
-            textArea.repaint();
         }
     };
 
