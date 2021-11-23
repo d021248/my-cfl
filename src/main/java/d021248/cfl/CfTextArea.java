@@ -81,10 +81,7 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         if (isScrollingActive) {
             truncate();
             setCaretPosition(getDocument().getLength());
-        } else {
-            setCaretPosition(caretPosition);
         }
-        caretPosition = this.getCaretPosition();
 
         var graphics2d = (Graphics2D) graphics.create();
         graphics2d.setColor(getBackground());
@@ -149,16 +146,20 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     }
 
     private void refresh() {
+        var caretPosition = this.getCaretPosition();
         setText("");
         String line;
         for (int i = 0; i < MAX_LINES; i++) {
-            line = this.linesBuffer[i];
-            this.linesBuffer[i] = EMPTY_LINE;
+            var j = (i + linesBufferIndex) % MAX_LINES;
+            line = this.linesBuffer[j];
+            this.linesBuffer[j] = EMPTY_LINE;
             this.tmpLinesBuffer[i] = line;
         }
+        linesBufferIndex = 0;
         for (int i = 0; i < MAX_LINES; i++) {
-            this.append(this.tmpLinesBuffer[i]);
+            append(this.tmpLinesBuffer[i]);
         }
+        this.setCaretPosition(caretPosition);
     }
 
     @Override
@@ -194,15 +195,6 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         // repaint();
     }
 
-    private int caretPosition = 0;
-
-    public void setPos(int caretPosition) {
-        this.caretPosition = caretPosition;
-    }
-
-    // ----------------------------------------------------------------------------------------
-    // filtering & highlighting
-    // ----------------------------------------------------------------------------------------
     private static final String FILTER_PREFIX = "]";
     private String highlightText = null;
     private Pattern highlightPattern = null;
