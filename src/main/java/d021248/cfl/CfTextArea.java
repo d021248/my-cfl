@@ -133,7 +133,6 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
         } else {
             super.append(line);
         }
-
         // repaint();
     }
 

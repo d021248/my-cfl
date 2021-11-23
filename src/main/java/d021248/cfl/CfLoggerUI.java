@@ -26,6 +26,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 
 public class CfLoggerUI implements Runnable {
 
@@ -71,7 +72,9 @@ public class CfLoggerUI implements Runnable {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         var frame = new JFrame(TITLE);
 
@@ -81,7 +84,9 @@ public class CfLoggerUI implements Runnable {
         BufferedImage image = null;
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // ------------------------------------------------------------------
         // add the TextArea
@@ -182,7 +187,6 @@ public class CfLoggerUI implements Runnable {
         toggleFilterButton.setEnabled(false);
 
         var filterValueTextPanel = new JPanel(new BorderLayout());
-        // filterValueTextPanel.add(filterValueLabel, BorderLayout.WEST);
         filterValueTextPanel.add(toggleFilterButton, BorderLayout.WEST);
         filterValueTextPanel.add(filterValueTextField, BorderLayout.EAST);
         buttonPanel.add(new JSeparator(SwingConstants.VERTICAL));
@@ -216,8 +220,7 @@ public class CfLoggerUI implements Runnable {
             frame.setIconImage(image);
         }
 
-        // frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         var windowAdapter = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
@@ -253,7 +256,6 @@ public class CfLoggerUI implements Runnable {
     }
 
     public void logger(String text) {
-        // System.err.println(text);
         textArea.append(text);
     }
 }
