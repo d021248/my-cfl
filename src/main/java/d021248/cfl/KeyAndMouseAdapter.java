@@ -120,9 +120,8 @@ class KeyAndMouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
             pos = textArea.viewToModel2D(e.getPoint());
-            textArea.stopScrolling(); // TODO:
-            // update
-            // Button
+            textArea.stopScrolling(); // TODO: update Button
+            applyHighlight.apply("", true);
 
             if (e.getButton() != MouseEvent.BUTTON1) {
                 return;

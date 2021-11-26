@@ -80,16 +80,10 @@ public class Cf {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
         Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
-        var envJson = lines
+        return lines
             .stream()
             .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
-            .dropWhile(line -> !line.equals("{"))
-            .takeWhile(line -> !line.equals("}"))
             .collect(Collectors.joining(CRLF, "", postfix));
-        if (envJson == null || envJson.equals(postfix)) {
-            envJson = "{}";
-        }
-        return envJson;
     }
 
     public static String env(String app) {
