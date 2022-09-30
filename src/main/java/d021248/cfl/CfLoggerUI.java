@@ -108,7 +108,7 @@ public class CfLoggerUI implements Runnable {
             new Thread(
                 () -> {
                     var target = Cf.target(this::logger);
-                    SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space)));
+                    SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
                 }
             )
                 .start();

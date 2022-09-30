@@ -18,7 +18,7 @@ import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, AdjustmentListener {
 
     private static final String CRLF = String.format("%n");
-    private static final int MAX_LINES = 2048;
+    private static final int MAX_LINES = 65536;
     private static final int MIN_FONT_SIZE = 4;
     private static final int MAX_FONT_SIZE = 32;
     private static final List<String> FONT_NAMES = List.of("Arial", "Courier", "Helvetica", "Monospaced", "Plain");

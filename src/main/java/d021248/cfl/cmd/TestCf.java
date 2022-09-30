@@ -21,7 +21,7 @@ public class TestCf {
         new Thread(Shell.cmd("cf", "restage", "mkv-srv")).start();
         System.out.println("----------------------------------------------------------------------------------------");
 
-        Cf.apps().stream().forEach(a -> System.out.println(a.name + " : " + a.urls));
+        Cf.apps().stream().forEach(a -> System.out.println(a.name() + " : " + a.urls()));
         System.out.println("----------------------------------------------------------------------------------------");
 
         Cf.logs(System.out::println);

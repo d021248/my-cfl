@@ -213,14 +213,14 @@ class CfAppSelector extends JComponent {
         Object[][] data = new Object[appList.size()][columnNames.length];
         for (int i = 0; i < appList.size(); i++) {
             var app = appList.get(i);
-            var isLogged = Command.activeList().stream().anyMatch(c -> c.cmd().contains(app.name));
+            var isLogged = Command.activeList().stream().anyMatch(c -> c.cmd().contains(app.name()));
             data[i][6] = isLogged;
-            data[i][0] = app.name;
-            data[i][1] = app.state;
-            data[i][2] = app.instances;
-            data[i][3] = app.memory;
-            data[i][4] = app.disk;
-            data[i][5] = app.urls;
+            data[i][0] = app.name();
+            data[i][1] = app.state();
+            data[i][2] = app.instances();
+            data[i][3] = app.memory();
+            data[i][4] = app.disk();
+            data[i][5] = app.urls();
         }
 
         return new DefaultTableModel(data, columnNames) {

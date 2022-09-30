@@ -69,7 +69,7 @@ public class Cf {
                         matcher.group(6)
                     )
             )
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public static List<App> apps() {
@@ -91,7 +91,7 @@ public class Cf {
     }
 
     public static void logs(Consumer<String> logger) {
-        Cf.apps(logger).stream().forEach(app -> Cf.logs(app.name, logger));
+        Cf.apps(logger).stream().forEach(app -> Cf.logs(app.name(), logger));
     }
 
     public static void logs(String appName, Consumer<String> logger) {
@@ -111,6 +111,6 @@ public class Cf {
     }
 
     public static void stopLogs() {
-        Cf.apps().stream().map(a -> a.name).forEach(Cf::stopLogs);
+        Cf.apps().stream().map(a -> a.name()).forEach(Cf::stopLogs);
     }
 }

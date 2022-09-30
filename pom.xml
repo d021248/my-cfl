@@ -13,7 +13,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
   </properties>
 
   <dependencies></dependencies>
@@ -42,13 +42,13 @@
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
           <configuration>
-              <archive>
-                  <manifest>
-                      <mainClass>d021248.cfl.CfLogger</mainClass>
-                  </manifest>
-              </archive>
-              <finalName>cfLogger</finalName>  
-          </configuration>          
+            <archive>
+              <manifest>
+                <mainClass>d021248.cfl.CfLogger</mainClass>
+              </manifest>
+            </archive>
+            <finalName>cfLogger</finalName>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
@@ -62,15 +62,15 @@
               </goals>
               <configuration>
                 <outputDirectory>${basedir}/target/classes/d021248/cfl</outputDirectory>
-                <resources>          
+                <resources>
                   <resource>
                     <directory>src/main/java/d021248/cfl</directory>
                     <includes>
                       <include>D021248.png</include>
                     </includes>
                   </resource>
-                </resources>             
-              </configuration>            
+                </resources>
+              </configuration>
             </execution>
           </executions>
         </plugin>
@@ -90,7 +90,7 @@
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.0.0</version>
-        </plugin>       
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
