@@ -1,3 +1,3 @@
 package d021248.cfl.cmd;
 
-public record App(String name, String state, String instances, String memory, String disk, String urls) {}
+public record App(String name, String state, String processes, String urls) {}

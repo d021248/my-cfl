@@ -91,10 +91,8 @@ class CfAppSelector extends JComponent {
         tableColumnModel.getColumn(0).setPreferredWidth(160);
         tableColumnModel.getColumn(1).setPreferredWidth(48);
         tableColumnModel.getColumn(2).setPreferredWidth(48);
+        tableColumnModel.getColumn(3).setPreferredWidth(192);
         tableColumnModel.getColumn(3).setPreferredWidth(48);
-        tableColumnModel.getColumn(4).setPreferredWidth(48);
-        tableColumnModel.getColumn(5).setPreferredWidth(192);
-        tableColumnModel.getColumn(5).setPreferredWidth(48);
         table.addMouseListener(
             new java.awt.event.MouseAdapter() {
                 @Override
@@ -104,7 +102,7 @@ class CfAppSelector extends JComponent {
 
                     if (row >= 0 && col >= 0) {
                         var tableModel = table.getModel();
-                        var isLogged = (Boolean) tableModel.getValueAt(row, 6);
+                        var isLogged = (Boolean) tableModel.getValueAt(row, 4);
                         var appName = (String) tableModel.getValueAt(row, 0);
 
                         switch (col) {
@@ -114,7 +112,7 @@ class CfAppSelector extends JComponent {
                                     table.setValueAt(false, row, 6);
                                 } else {
                                     Cf.logs(appName, loggerUI::logger);
-                                    table.setValueAt(true, row, 6);
+                                    table.setValueAt(true, row, 4);
                                 }
                                 break;
                             case 1:
@@ -199,7 +197,7 @@ class CfAppSelector extends JComponent {
     private void setTableSelection() {
         var tableModel = cfTable.getModel();
         for (int i = 0; i < tableModel.getRowCount(); i++) {
-            if (Boolean.TRUE.equals(tableModel.getValueAt(i, 6))) {
+            if (Boolean.TRUE.equals(tableModel.getValueAt(i, 4))) {
                 cfTable.addRowSelectionInterval(i, i);
             } else {
                 cfTable.removeRowSelectionInterval(i, i);
@@ -209,18 +207,16 @@ class CfAppSelector extends JComponent {
 
     private TableModel getTableModel() {
         var appList = Cf.apps();
-        String[] columnNames = { "name", "state", "instances", "memory", "disk", "urls", "logged" };
+        String[] columnNames = { "name", "state", "processes", "urls", "logged" };
         Object[][] data = new Object[appList.size()][columnNames.length];
         for (int i = 0; i < appList.size(); i++) {
             var app = appList.get(i);
             var isLogged = Command.activeList().stream().anyMatch(c -> c.cmd().contains(app.name()));
-            data[i][6] = isLogged;
+            data[i][4] = isLogged;
             data[i][0] = app.name();
             data[i][1] = app.state();
-            data[i][2] = app.instances();
-            data[i][3] = app.memory();
-            data[i][4] = app.disk();
-            data[i][5] = app.urls();
+            data[i][2] = app.processes();
+            data[i][3] = app.urls();
         }
 
         return new DefaultTableModel(data, columnNames) {
@@ -290,13 +286,11 @@ class CfAppSelector extends JComponent {
         var dialog = optionPane.createDialog(cfTable, appName);
         dialog.setModal(true);
 
-        showButton.addActionListener(
-            e -> {
-                Cf.run(loggerUI::logger, buttonGroup.getSelection().getActionCommand());
-                dialog.dispose();
-                populateTable();
-            }
-        );
+        showButton.addActionListener(e -> {
+            Cf.run(loggerUI::logger, buttonGroup.getSelection().getActionCommand());
+            dialog.dispose();
+            populateTable();
+        });
 
         if (image != null) {
             dialog.setIconImage(image);

@@ -12,9 +12,7 @@ public class Cf {
     // is correct, but does not work: private static final Pattern TARGET_PATTERN =
     // Pattern.compile("^\\S+:\\s+(\\S+)$");
     private static final Pattern TARGET_PATTERN = Pattern.compile(".*:(.*)");
-    private static final Pattern APPS_PATTERN = Pattern.compile(
-        "^(\\S+)\\s+(\\S+)\\s+(\\d+/\\d+)\\s+(\\d+\\S+)\\s+(\\d+\\S+)\\s?(.*)$"
-    );
+    private static final Pattern APPS_PATTERN = Pattern.compile("^(\\S+)\\s+(\\S+)\\s+(\\S+\\d+/\\d+)\\s+(\\S+)*$");
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
@@ -53,23 +51,15 @@ public class Cf {
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
         Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
-        return lines
+        var appList = lines
             .stream()
             .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
+            .skip(1)
             .map(APPS_PATTERN::matcher)
             .filter(Matcher::matches)
-            .map(
-                matcher ->
-                    new App(
-                        matcher.group(1),
-                        matcher.group(2),
-                        matcher.group(3),
-                        matcher.group(4),
-                        matcher.group(5),
-                        matcher.group(6)
-                    )
-            )
+            .map(matcher -> new App(matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(4)))
             .toList();
+        return appList;
     }
 
     public static List<App> apps() {
