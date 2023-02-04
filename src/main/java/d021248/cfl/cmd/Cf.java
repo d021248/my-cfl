@@ -12,7 +12,7 @@ public class Cf {
     // is correct, but does not work: private static final Pattern TARGET_PATTERN =
     // Pattern.compile("^\\S+:\\s+(\\S+)$");
     private static final Pattern TARGET_PATTERN = Pattern.compile(".*:(.*)");
-    private static final Pattern APPS_PATTERN = Pattern.compile("^(\\S+)\\s+(\\S+)\\s+(\\S+\\d+/\\d+)\\s+(\\S+)*$");
+    private static final Pattern APPS_PATTERN = Pattern.compile("^(\\S+)\\s+(\\S+)\\s+(\\S+)\\s*(.*)*$");
 
     private static final String CRLF = System.getProperty("line.separator", "\n");
 
