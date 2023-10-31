@@ -10,11 +10,13 @@ import java.util.function.Consumer;
 
 public class Shell extends Command {
 
-    private Consumer<String> stdoutConsumer = s -> {};
-    private Consumer<String> stderrConsumer = s -> {};
+    private Consumer<String> stdoutConsumer = s -> {
+    };
+    private Consumer<String> stderrConsumer = s -> {
+    };
     private InputStream stdin = null;
 
-    public Shell(String... cmd) {
+    protected Shell(String... cmd) {
         super(cmd);
     }
 
@@ -58,9 +60,9 @@ public class Shell extends Command {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (IOException e) {
             Optional
-                .ofNullable(this.stderrConsumer)
-                .orElse(System.err::println)
-                .accept(String.format("Error: %s", e.getMessage()));
+                    .ofNullable(this.stderrConsumer)
+                    .orElse(System.err::println)
+                    .accept(String.format("Error: %s", e.getMessage()));
         }
     }
 
@@ -73,9 +75,9 @@ public class Shell extends Command {
             }
         } catch (IOException e) {
             Optional
-                .ofNullable(this.stderrConsumer)
-                .orElse(System.err::println)
-                .accept(String.format("Error: %s", e.getMessage()));
+                    .ofNullable(this.stderrConsumer)
+                    .orElse(System.err::println)
+                    .accept(String.format("Error: %s", e.getMessage()));
         }
     }
 }

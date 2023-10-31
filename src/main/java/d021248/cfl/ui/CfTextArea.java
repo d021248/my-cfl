@@ -1,4 +1,4 @@
-package d021248.cfl;
+package d021248.cfl.ui;
 
 import java.awt.Color;
 import java.awt.Font;

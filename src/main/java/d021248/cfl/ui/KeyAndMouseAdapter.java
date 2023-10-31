@@ -1,6 +1,7 @@
-package d021248.cfl;
+package d021248.cfl.ui;
 
 import d021248.cfl.cmd.Shell;
+
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;

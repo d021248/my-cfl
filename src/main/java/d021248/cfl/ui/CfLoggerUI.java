@@ -1,7 +1,8 @@
-package d021248.cfl;
+package d021248.cfl.ui;
 
-import d021248.cfl.cmd.Cf;
 import d021248.cfl.cmd.Command;
+import d021248.cfl.cmd.cf.Cf;
+
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;

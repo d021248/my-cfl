@@ -1,4 +1,7 @@
-package d021248.cfl.cmd;
+package d021248.cfl.cmd.cf;
+
+import d021248.cfl.cmd.Command;
+import d021248.cfl.cmd.Shell;
 
 public class TestCf {
 
@@ -21,7 +24,7 @@ public class TestCf {
         new Thread(Shell.cmd("cf", "restage", "mkv-srv")).start();
         System.out.println("----------------------------------------------------------------------------------------");
 
-        Cf.apps().stream().forEach(a -> System.out.println(a.name() + " : " + a.urls()));
+        Cf.apps().stream().forEach(a -> System.out.println(a.name() + " : " + a.routes()));
         System.out.println("----------------------------------------------------------------------------------------");
 
         Cf.logs(System.out::println);

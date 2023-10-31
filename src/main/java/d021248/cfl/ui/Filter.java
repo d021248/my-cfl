@@ -1,4 +1,4 @@
-package d021248.cfl;
+package d021248.cfl.ui;
 
 interface Filter {
     public void setFilterText(String text);

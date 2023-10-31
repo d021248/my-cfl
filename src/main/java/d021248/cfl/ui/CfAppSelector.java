@@ -1,7 +1,8 @@
-package d021248.cfl;
+package d021248.cfl.ui;
 
-import d021248.cfl.cmd.Cf;
 import d021248.cfl.cmd.Command;
+import d021248.cfl.cmd.cf.Cf;
+
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -33,7 +34,7 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-class CfAppSelector extends JComponent {
+public class CfAppSelector extends JComponent {
 
     private static final String TITLE = ".-=:#[ app selector ]#:=-.";
     private static final String LOGO = "D021248.jpg";
@@ -54,14 +55,16 @@ class CfAppSelector extends JComponent {
         // ------------------------------------------------------------------
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         // ------------------------------------------------------------------
         // load Logo
         // ------------------------------------------------------------------
         try {
             image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         // ------------------------------------------------------------------
         // add the List
@@ -94,42 +97,41 @@ class CfAppSelector extends JComponent {
         tableColumnModel.getColumn(3).setPreferredWidth(192);
         tableColumnModel.getColumn(3).setPreferredWidth(48);
         table.addMouseListener(
-            new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    var row = table.rowAtPoint(evt.getPoint());
-                    var col = table.columnAtPoint(evt.getPoint());
+                new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+                        var row = table.rowAtPoint(evt.getPoint());
+                        var col = table.columnAtPoint(evt.getPoint());
 
-                    if (row >= 0 && col >= 0) {
-                        var tableModel = table.getModel();
-                        var isLogged = (Boolean) tableModel.getValueAt(row, 4);
-                        var appName = (String) tableModel.getValueAt(row, 0);
+                        if (row >= 0 && col >= 0) {
+                            var tableModel = table.getModel();
+                            var isLogged = (Boolean) tableModel.getValueAt(row, 4);
+                            var appName = (String) tableModel.getValueAt(row, 0);
 
-                        switch (col) {
-                            case 6:
-                                if (Boolean.FALSE.equals(isLogged)) {
-                                    Cf.stopLogs(appName);
-                                    table.setValueAt(false, row, 6);
-                                } else {
-                                    Cf.logs(appName, loggerUI::logger);
-                                    table.setValueAt(true, row, 4);
-                                }
-                                break;
-                            case 1:
-                                doActionCommand(appName);
-                                break;
-                            case 0:
-                                getEnvironment(appName);
-                                break;
-                            default:
-                                break;
+                            switch (col) {
+                                case 6:
+                                    if (Boolean.FALSE.equals(isLogged)) {
+                                        Cf.stopLogs(appName);
+                                        table.setValueAt(false, row, 6);
+                                    } else {
+                                        Cf.logs(appName, loggerUI::logger);
+                                        table.setValueAt(true, row, 4);
+                                    }
+                                    break;
+                                case 1:
+                                    doActionCommand(appName);
+                                    break;
+                                case 0:
+                                    getEnvironment(appName);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            evt.consume();
+                            setTableSelection();
                         }
-                        evt.consume();
-                        setTableSelection();
                     }
-                }
-            }
-        );
+                });
 
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         var tablePane = new JScrollPane((new JPanel(new GridLayout(1, 2))).add(table));
@@ -167,22 +169,21 @@ class CfAppSelector extends JComponent {
             dialog.setIconImage(image);
         }
         dialog.addWindowListener(
-            new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent e) {
-                    if (parent != null) {
-                        parent.setEnabled(true);
+                new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        if (parent != null) {
+                            parent.setEnabled(true);
+                        }
                     }
-                }
 
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    if (parent != null) {
-                        parent.setEnabled(true);
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+                        if (parent != null) {
+                            parent.setEnabled(true);
+                        }
                     }
-                }
-            }
-        );
+                });
         dialog.setPreferredSize(new Dimension(512, 480));
         dialog.setResizable(true);
         dialog.pack();
@@ -216,7 +217,7 @@ class CfAppSelector extends JComponent {
             data[i][0] = app.name();
             data[i][1] = app.state();
             data[i][2] = app.processes();
-            data[i][3] = app.urls();
+            data[i][3] = app.routes();
         }
 
         return new DefaultTableModel(data, columnNames) {
