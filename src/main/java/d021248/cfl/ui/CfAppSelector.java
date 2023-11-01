@@ -112,7 +112,7 @@ public class CfAppSelector extends JComponent {
                                 case 4:
                                     if (Boolean.FALSE.equals(isLogged)) {
                                         Cf.stopLogs(appName);
-                                        table.setValueAt(false, row, 6);
+                                        table.setValueAt(false, row, 4);
                                     } else {
                                         Cf.logs(appName, loggerUI::logger);
                                         table.setValueAt(true, row, 4);

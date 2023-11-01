@@ -1,13 +1,13 @@
 package d021248.cfl.ui;
 
 interface Highlight {
-    public void setHighlightText(String text);
+    void setHighlightText(String text);
 
-    public String getHighlightText();
+    String getHighlightText();
 
-    public void applyHighlight();
+    void applyHighlight();
 
-    public void removeHighlight();
+    void removeHighlight();
 
-    public boolean isHighlightActive();
+    boolean isHighlightActive();
 }
