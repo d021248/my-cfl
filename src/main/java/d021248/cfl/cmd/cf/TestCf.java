@@ -1,5 +1,6 @@
 package d021248.cfl.cmd.cf;
 
+import d021248.cfl.cmd.Cf;
 import d021248.cfl.cmd.Command;
 import d021248.cfl.cmd.Shell;
 

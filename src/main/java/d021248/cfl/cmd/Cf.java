@@ -1,12 +1,12 @@
-package d021248.cfl.cmd.cf;
+package d021248.cfl.cmd;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import d021248.cfl.cmd.Command;
-import d021248.cfl.cmd.Shell;
+import d021248.cfl.cmd.cf.App;
+import d021248.cfl.cmd.cf.Target;
 
 public class Cf {
 

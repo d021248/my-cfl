@@ -1,7 +1,7 @@
 package d021248.cfl.ui;
 
+import d021248.cfl.cmd.Cf;
 import d021248.cfl.cmd.Command;
-import d021248.cfl.cmd.cf.Cf;
 
 import java.awt.BorderLayout;
 import java.awt.Desktop;
@@ -95,7 +95,7 @@ public class CfAppSelector extends JComponent {
         tableColumnModel.getColumn(1).setPreferredWidth(48);
         tableColumnModel.getColumn(2).setPreferredWidth(48);
         tableColumnModel.getColumn(3).setPreferredWidth(192);
-        tableColumnModel.getColumn(3).setPreferredWidth(48);
+        tableColumnModel.getColumn(3).setPreferredWidth(16);
         table.addMouseListener(
                 new java.awt.event.MouseAdapter() {
                     @Override
@@ -109,7 +109,7 @@ public class CfAppSelector extends JComponent {
                             var appName = (String) tableModel.getValueAt(row, 0);
 
                             switch (col) {
-                                case 6:
+                                case 4:
                                     if (Boolean.FALSE.equals(isLogged)) {
                                         Cf.stopLogs(appName);
                                         table.setValueAt(false, row, 6);
@@ -231,7 +231,7 @@ public class CfAppSelector extends JComponent {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // all cells false
-                return column == 6;
+                return column == 4;
             }
         };
     }

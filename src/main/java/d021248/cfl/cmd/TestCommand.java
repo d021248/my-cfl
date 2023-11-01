@@ -7,15 +7,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.function.Predicate;
 
-import d021248.cfl.cmd.cf.Cf;
-
 public class TestCommand {
-
 
     public static void main(String[] args) throws IOException, InterruptedException {
         // Shell.cmd("cmd").run();
 
-        // Cf.apps();
+        Cf.apps();
         Cf.target();
 
         Shell.cmd("cf", "apps").run();
