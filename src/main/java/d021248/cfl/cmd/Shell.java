@@ -14,7 +14,7 @@ public class Shell extends Command {
     };
     private Consumer<String> stderrConsumer = s -> {
     };
-    private InputStream stdin = null;
+    private InputStream stdin = System.in;
 
     protected Shell(String... cmd) {
         super(cmd);
@@ -41,21 +41,16 @@ public class Shell extends Command {
 
     @Override
     public void run() {
-        this.stdin = Optional.ofNullable(this.stdin).orElse(System.in);
-        Consumer<OutputStream> toStdinConsumer = os -> this.transferTo(this.stdin, os);
-        this.stdinHandler(toStdinConsumer);
 
-        Consumer<InputStream> toStdoutConsumer = is -> toConsumer(is, this.stdoutConsumer);
-        this.stdoutHandler(toStdoutConsumer);
-
-        Consumer<InputStream> toStderrConsumer = is -> toConsumer(is, this.stderrConsumer);
-        this.stderrHandler(toStderrConsumer);
+        this.stdinHandler(os -> this.handle(this.stdin, os));
+        this.stdoutHandler(is -> this.handle(is, this.stdoutConsumer));
+        this.stderrHandler(is -> this.handle(is, this.stderrConsumer));
 
         this.stdoutConsumer.accept(this.cmd());
         super.run();
     }
 
-    private void toConsumer(InputStream is, Consumer<String> consumer) {
+    private void handle(InputStream is, Consumer<String> consumer) {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (IOException e) {
@@ -66,7 +61,7 @@ public class Shell extends Command {
         }
     }
 
-    private void transferTo(InputStream is, OutputStream os) {
+    private void handle(InputStream is, OutputStream os) {
         int c;
         try {
             while ((c = is.read()) > -1) {
