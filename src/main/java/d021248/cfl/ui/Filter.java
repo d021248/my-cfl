@@ -1,13 +1,13 @@
 package d021248.cfl.ui;
 
 interface Filter {
-    public void setFilterText(String text);
+    void setFilterText(String text);
 
-    public String getFilterText();
+    String getFilterText();
 
-    public void startFilter();
+    void startFilter();
 
-    public void stopFilter();
+    void stopFilter();
 
-    public boolean isFilterActive();
+    boolean isFilterActive();
 }
