@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,7 @@ public class Command implements Runnable {
     protected Consumer<InputStream> stderrHandler = null;
 
     protected Command(String... cmd) {
+        Objects.requireNonNull(cmd);
         this.cmd = cmd;
         this.commandString = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
     }
@@ -79,10 +81,9 @@ public class Command implements Runnable {
     }
 
     protected int run(
-        Consumer<OutputStream> stdinHandler,
-        Consumer<InputStream> stdoutHandler,
-        Consumer<InputStream> stderrHandler
-    ) throws IOException, InterruptedException {
+            Consumer<OutputStream> stdinHandler,
+            Consumer<InputStream> stdoutHandler,
+            Consumer<InputStream> stderrHandler) throws IOException, InterruptedException {
         if (process != null) {
             throw new IOException(String.format("Command already started: %s", this));
         }

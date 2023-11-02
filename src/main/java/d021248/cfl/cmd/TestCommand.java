@@ -10,7 +10,8 @@ import java.util.function.Predicate;
 public class TestCommand {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        // Shell.cmd("cmd").run();
+
+        Shell.cmd("cmd").run();
 
         Cf.apps();
         Cf.target();
@@ -53,7 +54,7 @@ public class TestCommand {
     }
 
     private static void stdinHandler(OutputStream os) {
-        System.out.println("starting handlerOut()");
+        System.out.println("starting stdinHandler");
         int c;
         try {
             while ((c = System.in.read()) > -1) {
@@ -65,7 +66,7 @@ public class TestCommand {
     }
 
     private static void stderrHandler(InputStream is) {
-        System.out.println("starting handlerErr()");
+        System.out.println("starting stderrHandler");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader
                     .lines()
@@ -78,7 +79,7 @@ public class TestCommand {
     }
 
     private static void stdoutHandler(InputStream is) {
-        System.out.println("starting handlerIn()");
+        System.out.println("starting stdoutHandler");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader
                     .lines()

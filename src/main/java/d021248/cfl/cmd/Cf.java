@@ -40,14 +40,12 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
-        var appList = lines
+        Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).run();
+        return lines
                 .stream()
-                .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
                 .filter(App::matches)
                 .map(App::from)
                 .toList();
-        return appList;
     }
 
     public static List<App> apps() {
@@ -57,10 +55,9 @@ public class Cf {
     public static String env(String app, Consumer<String> logger) {
         var postfix = String.format("%s}", CRLF);
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "env", app).stdoutConsumer(lines::add).run();
+        Shell.cmd("cf", "env", app).stdoutConsumer(logger.andThen(lines::add)).run();
         return lines
                 .stream()
-                .peek(logger::accept) // workaround: logger.andThen(lines::add) does not work
                 .collect(Collectors.joining(CRLF, "", postfix));
     }
 
