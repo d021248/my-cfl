@@ -5,30 +5,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.function.Predicate;
 
 public class TestCommand {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
         Shell.cmd("cmd").run();
+        System.out.println();
 
         Cf.apps();
+        System.out.println();
+
         Cf.target();
+        System.out.println();
 
         Shell.cmd("cf", "apps").run();
-
         System.out.println();
+
         Command
                 .cmd("cf env mkv-srv")
                 .stdinHandler(TestCommand::stdinHandler)
                 .stdoutHandler(TestCommand::stdoutHandler)
                 .stderrHandler(TestCommand::stderrHandler)
                 .run();
-
         System.out.println();
 
-        System.out.println();
         Command
                 .cmd("cmd")
                 .stdinHandler(TestCommand::stdinHandler)
@@ -37,7 +38,6 @@ public class TestCommand {
                 .run();
         System.out.println();
 
-        System.out.println();
         Command
                 .cmd("notepad")
                 .stdinHandler(TestCommand::stdinHandler)
@@ -55,25 +55,26 @@ public class TestCommand {
 
     private static void stdinHandler(OutputStream os) {
         System.out.println("starting stdinHandler");
+
         int c;
         try {
             while ((c = System.in.read()) > -1) {
                 os.write(c);
-                os.flush();
+                if (c == '\n') {
+                    os.flush();
+                }
             }
+            os.flush();
         } catch (IOException e) {
+            System.err.println(String.format("Error: %s", e.getMessage()));
         }
     }
 
     private static void stderrHandler(InputStream is) {
         System.out.println("starting stderrHandler");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader
-                    .lines()
-                    .filter(Predicate.not(String::isEmpty))
-                    .map(String::trim)
-                    .forEach(line -> System.out.println("err>>" + line));
-        } catch (IOException e) {
+            bufferedReader.lines().forEach(line -> System.out.println("err>>" + line));
+        } catch (Exception e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
         }
     }
@@ -81,12 +82,8 @@ public class TestCommand {
     private static void stdoutHandler(InputStream is) {
         System.out.println("starting stdoutHandler");
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader
-                    .lines()
-                    .filter(Predicate.not(String::isEmpty))
-                    .map(String::trim)
-                    .forEach(line -> System.out.println("out>>" + line));
-        } catch (IOException e) {
+            bufferedReader.lines().forEach(line -> System.out.println("out>>" + line));
+        } catch (Exception e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
         }
     }

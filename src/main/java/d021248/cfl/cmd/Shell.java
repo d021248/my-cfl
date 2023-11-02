@@ -1,25 +1,17 @@
 package d021248.cfl.cmd;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class Shell extends Command {
 
-    private static final Consumer<String> DEFAULT_STDERR_CONSUMER = System.err::println;
-
-    private Consumer<String> stdoutConsumer = s -> {
-    };
-    private Consumer<String> stderrConsumer = s -> {
-    };
-
+    private Consumer<String> stdoutConsumer = System.out::println;
+    private Consumer<String> stderrConsumer = System.err::println;
     private Supplier<InputStream> stdinSupplier = () -> System.in;
 
     protected Shell(String... cmd) {
@@ -62,26 +54,26 @@ public class Shell extends Command {
     private void pipe(InputStream is, Consumer<String> consumer) {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader.lines().forEach(consumer::accept);
-        } catch (IOException e) {
-            Optional
-                    .ofNullable(this.stderrConsumer)
-                    .orElse(DEFAULT_STDERR_CONSUMER)
-                    .accept(String.format("Error: %s", e.getMessage()));
+        } catch (Exception e) {
+            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
+            throw new RuntimeException(e);
         }
     }
 
     private void pipe(Supplier<InputStream> supplier, OutputStream os) {
         int c;
-        try (var is = supplier.get()) {
+        try {
+            var is = supplier.get();
             while ((c = is.read()) > -1) {
                 os.write(c);
-                os.flush();
+                if (c == '\n') {
+                    os.flush();
+                }
             }
-        } catch (IOException e) {
-            Optional
-                    .ofNullable(this.stderrConsumer)
-                    .orElse(DEFAULT_STDERR_CONSUMER)
-                    .accept(String.format("Error: %s", e.getMessage()));
+            os.flush();
+        } catch (Exception e) {
+            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
+            throw new RuntimeException(e);
         }
     }
 }
