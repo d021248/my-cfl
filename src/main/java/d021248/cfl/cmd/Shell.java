@@ -42,7 +42,6 @@ public class Shell extends Command {
 
     @Override
     public void run() {
-
         this.stdinHandler(os -> this.pipe(this.stdinSupplier, os));
         this.stdoutHandler(is -> this.pipe(is, this.stdoutConsumer));
         this.stderrHandler(is -> this.pipe(is, this.stderrConsumer));
@@ -55,25 +54,15 @@ public class Shell extends Command {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (Exception e) {
-            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
-            throw new RuntimeException(e);
+            this.stderrConsumer.accept("Error while piping stream: " + e.getMessage());
         }
     }
 
     private void pipe(Supplier<InputStream> supplier, OutputStream os) {
-        int c;
-        try {
-            var is = supplier.get();
-            while ((c = is.read()) > -1) {
-                os.write(c);
-                if (c == '\n') {
-                    os.flush();
-                }
-            }
-            os.flush();
+        try (var inputStream = supplier.get()) {
+            inputStream.transferTo(os);
         } catch (Exception e) {
-            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
-            throw new RuntimeException(e);
+            this.stderrConsumer.accept("Error while piping stream: " + e.getMessage());
         }
     }
 }

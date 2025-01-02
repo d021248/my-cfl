@@ -22,7 +22,7 @@ public class Cf {
         for (int i = 0; i < command.length; i++) {
             cmd[i + 2] = command[i];
         }
-        new Thread(Shell.cmd(cmd).stdoutConsumer(logger)).start();
+        Thread.ofVirtual().start(Shell.cmd(cmd).stdoutConsumer(logger));
     }
 
     public static Target target(Consumer<String> logger) {
@@ -74,7 +74,7 @@ public class Cf {
         var logAppCommand = Shell
                 .cmd("cf", "logs", appName)
                 .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)));
-        new Thread(logAppCommand).start();
+        Thread.ofVirtual().start(logAppCommand);
     }
 
     public static void stopLogs(String appname) {
