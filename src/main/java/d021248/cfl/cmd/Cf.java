@@ -66,7 +66,8 @@ public class Cf {
     }
 
     public static void logs(Consumer<String> logger) {
-        Cf.apps(logger).stream().forEach(app -> Cf.logs(app.name(), logger));
+        var apps = Cf.apps(); // avoid concurrent modification
+        apps.stream().forEach(app -> Cf.logs(app.name(), logger));
     }
 
     public static void logs(String appName, Consumer<String> logger) {
