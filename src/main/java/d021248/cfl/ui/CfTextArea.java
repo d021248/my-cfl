@@ -9,58 +9,51 @@ import java.awt.event.AdjustmentListener;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
 import javax.swing.JTextArea;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
 import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 
 class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, AdjustmentListener {
 
-    private static final String CRLF = String.format("%n");
+    private static final String CRLF = System.lineSeparator();
     private static final int MAX_LINES = 65536;
     private static final int MIN_FONT_SIZE = 4;
     private static final int MAX_FONT_SIZE = 32;
     private static final List<String> FONT_NAMES = List.of("Arial", "Courier", "Helvetica", "Monospaced", "Plain");
-    private static final String EMPTY_LINE = CRLF;
 
-    private static final long serialVersionUID = 1L;
     private int fontSize = 11;
     private int fontNameIndex = 3;
-    private final transient DefaultHighlightPainter painter;
-    private final transient CfLogo logo;
-    private final String[] tmpLinesBuffer;
+    private final DefaultHighlighter.DefaultHighlightPainter painter;
+    private final CfLogo logo;
     private final String[] linesBuffer;
     private int linesBufferIndex;
 
     public CfTextArea() {
-        super();
         setOpaque(false);
         setFont(new Font(FONT_NAMES.get(fontNameIndex), Font.PLAIN, fontSize));
 
         this.painter = new DefaultHighlighter.DefaultHighlightPainter(new Color(128, 196, 255));
-        this.tmpLinesBuffer = new String[MAX_LINES];
         this.linesBuffer = new String[MAX_LINES];
         this.linesBufferIndex = 0;
 
         this.logo = new CfLogo(this);
         this.logo.start();
 
-        var caret = (DefaultCaret) this.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+        ((DefaultCaret) getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
     }
 
-    // ----------------------------------------------------------------------------------------
-    // font
-    // ----------------------------------------------------------------------------------------
     public void increaseFontSize() {
-        fontSize = (fontSize >= MAX_FONT_SIZE) ? MAX_FONT_SIZE : fontSize + 1;
-        setFont(new Font(getFont().getName(), Font.PLAIN, fontSize));
-        repaint();
+        updateFontSize(1);
     }
 
     public void decreaseFontSize() {
-        fontSize = (fontSize <= MIN_FONT_SIZE) ? MIN_FONT_SIZE : fontSize - 1;
+        updateFontSize(-1);
+    }
+
+    private void updateFontSize(int change) {
+        fontSize = Math.min(Math.max(fontSize + change, MIN_FONT_SIZE), MAX_FONT_SIZE);
         setFont(new Font(getFont().getName(), Font.PLAIN, fontSize));
         repaint();
     }
@@ -76,28 +69,28 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     }
 
     @Override
-    protected synchronized void paintComponent(Graphics graphics) {
+    protected void paintComponent(Graphics g) {
         applyHighlight();
         if (isScrollingActive) {
             truncate();
             setCaretPosition(getDocument().getLength());
         }
 
-        var graphics2d = (Graphics2D) graphics.create();
-        graphics2d.setColor(getBackground());
-        graphics2d.fillRect(0, 0, getWidth(), getHeight());
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setColor(getBackground());
+        g2d.fillRect(0, 0, getWidth(), getHeight());
 
-        super.paintComponent(graphics2d);
-        logo.paintLogo(graphics2d);
-        graphics2d.dispose();
+        super.paintComponent(g2d);
+        logo.paintLogo(g2d);
+        g2d.dispose();
     }
 
     public void truncate() {
-        var numLinesToTruncate = this.getLineCount() - MAX_LINES - 1;
+        int numLinesToTruncate = getLineCount() - MAX_LINES - 1;
         if (numLinesToTruncate > 0) {
             try {
-                var posOfLastLineToTrunk = this.getLineEndOffset(numLinesToTruncate - 1);
-                this.replaceRange("", 0, posOfLastLineToTrunk);
+                int posOfLastLineToTruncate = getLineEndOffset(numLinesToTruncate - 1);
+                replaceRange("", 0, posOfLastLineToTruncate);
             } catch (BadLocationException ex) {
                 ex.printStackTrace();
             }
@@ -110,71 +103,65 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
             return;
         }
 
-        var line = text.endsWith(CRLF) ? text : String.format("%s%n", text);
+        String line = text.endsWith(CRLF) ? text : text + CRLF;
         linesBuffer[linesBufferIndex] = line;
         linesBufferIndex = (linesBufferIndex + 1) % MAX_LINES;
 
         if (isPrettyLoggingActive) {
             var matcher = prettyLoggingPattern.matcher(line);
             if (matcher.find()) {
-                var tmp = String.format("%-20s | %s | %s%n", matcher.group(1), matcher.group(2), matcher.group(4));
-                line = tmp;
+                line = String.format("%-20s | %s | %s%n", matcher.group(1), matcher.group(2), matcher.group(4));
             }
         }
 
         if (isHighlightActive && isFilterActive) {
             try {
                 if (highlightPattern.matcher(line).find()) {
-                    super.append(String.format("%s%s", FILTER_PREFIX, line));
+                    super.append(FILTER_PREFIX + line);
                 }
             } catch (PatternSyntaxException pse) {
-                super.append(String.format("%s%s", FILTER_PREFIX, line));
+                super.append(FILTER_PREFIX + line);
             }
         } else {
             super.append(line);
         }
-        // repaint();
     }
 
     public void clear() {
         setText("");
         for (int i = 0; i < MAX_LINES; i++) {
-            this.linesBuffer[i] = EMPTY_LINE;
+            linesBuffer[i] = CRLF;
         }
         linesBufferIndex = 0;
     }
 
     private void refresh() {
-        var caretPosition = this.getCaretPosition();
+        int caretPosition = getCaretPosition();
         setText("");
-        String line;
+        String[] tmpLinesBuffer = new String[MAX_LINES];
         for (int i = 0; i < MAX_LINES; i++) {
-            var j = (i + linesBufferIndex) % MAX_LINES;
-            line = this.linesBuffer[j];
-            this.linesBuffer[j] = EMPTY_LINE;
-            this.tmpLinesBuffer[i] = line;
+            int j = (i + linesBufferIndex) % MAX_LINES;
+            String line = linesBuffer[j];
+            linesBuffer[j] = CRLF;
+            tmpLinesBuffer[i] = line;
         }
         linesBufferIndex = 0;
-        for (int i = 0; i < MAX_LINES; i++) {
-            append(this.tmpLinesBuffer[i]);
+        for (String line : tmpLinesBuffer) {
+            append(line);
         }
-        this.setCaretPosition(caretPosition);
+        setCaretPosition(caretPosition);
     }
 
     @Override
     public void adjustmentValueChanged(AdjustmentEvent e) {
-        // repaint();
+        // Implement any necessary actions for adjustment value changes here
     }
 
-    // ----------------------------------------------------------------------------------------
-    // pretty logging
-    // ----------------------------------------------------------------------------------------
+    // Pretty logging variables
     private boolean isPrettyLoggingActive = false;
     private Pattern prettyLoggingPattern = Pattern.compile("(.*) (.*) \\[(.*)\\] (.*)");
 
-    // ----------------------------------------------------------------------------------------
-    // scrolling
-    // ----------------------------------------------------------------------------------------
+    // Scrolling variables
     private boolean isScrollingActive = true;
 
     @Override
@@ -185,15 +172,14 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
     @Override
     public void startScrolling() {
         isScrollingActive = true;
-        // repaint();
     }
 
     @Override
     public void stopScrolling() {
         isScrollingActive = false;
-        // repaint();
     }
 
+    // Filter and Highlight variables
     private static final String FILTER_PREFIX = "]";
     private String highlightText = null;
     private Pattern highlightPattern = null;
@@ -212,14 +198,9 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
 
     @Override
     public void startFilter() {
-        if (isFilterActive) {
-            isFilterActive = false;
+        isFilterActive = !isFilterActive;
+        if (isHighlightActive) {
             refresh();
-        } else {
-            if (isHighlightActive) {
-                isFilterActive = true;
-                refresh();
-            }
         }
     }
 
@@ -252,15 +233,15 @@ class CfTextArea extends JTextArea implements Highlight, Filter, Scrolling, Adju
 
     @Override
     public void applyHighlight() {
-        var highliter = getHighlighter();
-        highliter.removeAllHighlights();
+        var highlighter = getHighlighter();
+        highlighter.removeAllHighlights();
         if (!isHighlightActive) {
             return;
         }
         var matcher = highlightPattern.matcher(getText());
         while (matcher.find()) {
             try {
-                highliter.addHighlight(matcher.start(), matcher.end(), painter);
+                highlighter.addHighlight(matcher.start(), matcher.end(), painter);
             } catch (BadLocationException e) {
                 e.printStackTrace();
             }
