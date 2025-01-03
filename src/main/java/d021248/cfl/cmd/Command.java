@@ -20,9 +20,9 @@ public class Command implements Runnable {
     private final String[] cmd;
     private final String commandString;
 
-    protected Consumer<OutputStream> stdinHandler = null;
-    protected Consumer<InputStream> stdoutHandler = null;
-    protected Consumer<InputStream> stderrHandler = null;
+    protected Consumer<OutputStream> stdinHandler = null; // consumer of process stdin
+    protected Consumer<InputStream> stdoutHandler = null; // consumer of process stdout
+    protected Consumer<InputStream> stderrHandler = null; // consumer of process stderr
 
     public static Command cmd(String... cmd) {
         return new Command(cmd);
