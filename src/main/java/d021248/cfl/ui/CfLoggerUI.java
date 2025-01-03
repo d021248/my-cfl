@@ -1,8 +1,5 @@
 package d021248.cfl.ui;
 
-import d021248.cfl.cmd.Cf;
-import d021248.cfl.cmd.Command;
-
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -15,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -28,6 +26,9 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+
+import d021248.cfl.cmd.Cf;
+import d021248.cfl.cmd.Command;
 
 public class CfLoggerUI implements Runnable {
 
@@ -61,168 +62,37 @@ public class CfLoggerUI implements Runnable {
         return cfLoggerUI;
     }
 
-    private CfLoggerUI() {}
+    private CfLoggerUI() {
+    }
 
     public void run() {
         initialize();
     }
 
     private void initialize() {
-        // ------------------------------------------------------------------
-        // set Look & Feel
-        // ------------------------------------------------------------------
+        setLookAndFeel();
+        var frame = createMainFrame();
+        loadLogo(frame);
+        addTextArea(frame);
+        addButtons(frame);
+        keyAndMouseAdapter = new KeyAndMouseAdapter(this);
+        frame.setVisible(true);
+    }
+
+    private void setLookAndFeel() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
+    private JFrame createMainFrame() {
         var frame = new JFrame(TITLE);
-
-        // ------------------------------------------------------------------
-        // load Logo
-        // ------------------------------------------------------------------
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(this.getClass().getResource(LOGO));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // ------------------------------------------------------------------
-        // add the TextArea
-        // ------------------------------------------------------------------
-        textArea = new CfTextArea();
-        textAreaScrollPane = new JScrollPane(textArea);
-        textAreaScrollPane.setBorder(BorderFactory.createEtchedBorder());
-        textAreaScrollPane.getHorizontalScrollBar().addAdjustmentListener(textArea);
-        textAreaScrollPane.getVerticalScrollBar().addAdjustmentListener(textArea);
-
-        // ------------------------------------------------------------------
-        // add the buttons
-        // ------------------------------------------------------------------
-        var buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBorder(BorderFactory.createEtchedBorder());
-
-        var cfTargetButton = new JButton(BT_CF_TARGET);
-        ActionListener cfTargetButtonActionListener = e ->
-            new Thread(
-                () -> {
-                    var target = Cf.target(this::logger);
-                    SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
-                }
-            )
-                .start();
-        cfTargetButton.addActionListener(cfTargetButtonActionListener);
-        buttonPanel.add(cfTargetButton);
-        new Thread(() -> cfTargetButtonActionListener.actionPerformed(null)).start();
-
-        var cfAppsButton = new JButton(BT_CF_APPS);
-        cfAppsButton.addActionListener(e -> new CfAppSelector(this));
-        buttonPanel.add(cfAppsButton);
-
-        var cfLogsButton = new JButton(BT_LOG_ALL);
-        cfLogsButton.addActionListener(e -> new Thread(() -> Cf.logs(this::logger)).start());
-        buttonPanel.add(cfLogsButton);
-
-        // ------------------------------------------------------------------
-        // add the separator
-        // ------------------------------------------------------------------
-        var vSep1 = new JSeparator(SwingConstants.VERTICAL);
-        vSep1.setPreferredSize(new Dimension(2, (int) cfTargetButton.getPreferredSize().getHeight()));
-        buttonPanel.add(Box.createHorizontalStrut(4));
-        buttonPanel.add(vSep1);
-        buttonPanel.add(Box.createHorizontalStrut(2));
-
-        // ------------------------------------------------------------------
-        // add the buttons
-        // ------------------------------------------------------------------
-        var clearButton = new JButton(BT_CLEAR);
-        clearButton.addActionListener(e -> textArea.clear());
-        buttonPanel.add(clearButton);
-
-        toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
-        toggleScrollButton.addActionListener(
-            e -> {
-                if (textArea.isScrollingActive()) {
-                    toggleScrollButton.setText(BT_START_AUTO_SCROLL);
-                    textArea.stopScrolling();
-                } else {
-                    toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
-                    textArea.startScrolling();
-                }
-            }
-        );
-        buttonPanel.add(toggleScrollButton);
-
-        // ------------------------------------------------------------------
-        // add the separator
-        // ------------------------------------------------------------------
-        var vSep2 = new JSeparator(SwingConstants.VERTICAL);
-        vSep2.setPreferredSize(new Dimension(2, (int) cfTargetButton.getPreferredSize().getHeight()));
-        buttonPanel.add(Box.createHorizontalStrut(4));
-        buttonPanel.add(vSep2);
-        buttonPanel.add(Box.createHorizontalStrut(0));
-
-        // ------------------------------------------------------------------
-        // add the filter
-        // ------------------------------------------------------------------
-        toggleFilterButton = new JButton(BT_FILTER_ON);
-        filterValueTextField = new JTextField("", 20);
-
-        toggleFilterButton.addActionListener(
-            e -> {
-                if (!textArea.isHighlightActive()) {
-                    return;
-                }
-
-                if (textArea.isFilterActive()) {
-                    toggleFilterButton.setText(BT_FILTER_ON);
-                    textArea.stopFilter();
-                } else {
-                    toggleFilterButton.setText(BT_FILTER_OFF);
-                    textArea.startFilter();
-                }
-            }
-        );
-        toggleFilterButton.setEnabled(false);
-
-        var filterValueTextPanel = new JPanel(new BorderLayout());
-        filterValueTextPanel.add(toggleFilterButton, BorderLayout.WEST);
-        filterValueTextPanel.add(filterValueTextField, BorderLayout.EAST);
-        buttonPanel.add(new JSeparator(SwingConstants.VERTICAL));
-        buttonPanel.add(filterValueTextPanel);
-
-        // ------------------------------------------------------------------
-        // add the separator
-        // ------------------------------------------------------------------
-        var vSep3 = new JSeparator(SwingConstants.VERTICAL);
-        vSep3.setPreferredSize(new Dimension(2, (int) cfTargetButton.getPreferredSize().getHeight()));
-        buttonPanel.add(Box.createHorizontalStrut(4));
-        buttonPanel.add(vSep3);
-        buttonPanel.add(Box.createHorizontalStrut(0));
-
-        // ------------------------------------------------------------------
-        // add the button
-        // ------------------------------------------------------------------
-        var saveButton = new JButton(BT_SAVE);
-        saveButton.addActionListener(e -> new Thread(() -> this.save()).start());
-        buttonPanel.add(saveButton);
-
-        // ------------------------------------------------------------------
-        // add the frame itself
-        // ------------------------------------------------------------------
-        keyAndMouseAdapter = new KeyAndMouseAdapter(this);
         frame.setLocation(200, 200);
         frame.setLayout(new BorderLayout());
-        frame.getContentPane().add(textAreaScrollPane, BorderLayout.CENTER);
-        frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-        if (image != null) {
-            frame.setIconImage(image);
-        }
-
         frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        var windowAdapter = new WindowAdapter() {
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent event) {
                 frame.dispose();
@@ -231,23 +101,127 @@ public class CfLoggerUI implements Runnable {
                 System.err.println(String.format("exit: %s", CfLoggerUI.this.getClass().getSimpleName()));
                 System.exit(0); // will close all instances
             }
-        };
-        frame.addWindowListener(windowAdapter);
-        frame.addWindowFocusListener(windowAdapter);
-        frame.addWindowStateListener(windowAdapter);
+        });
         frame.pack();
         frame.setSize(800, 600);
-        frame.setVisible(true);
+        return frame;
+    }
+
+    private void loadLogo(JFrame frame) {
+        try {
+            BufferedImage image = ImageIO.read(this.getClass().getResource(LOGO));
+            if (image != null) {
+                frame.setIconImage(image);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addTextArea(JFrame frame) {
+        textArea = new CfTextArea();
+        textAreaScrollPane = new JScrollPane(textArea);
+        textAreaScrollPane.setBorder(BorderFactory.createEtchedBorder());
+        textAreaScrollPane.getHorizontalScrollBar().addAdjustmentListener(textArea);
+        textAreaScrollPane.getVerticalScrollBar().addAdjustmentListener(textArea);
+        frame.getContentPane().add(textAreaScrollPane, BorderLayout.CENTER);
+    }
+
+    private void addButtons(JFrame frame) {
+        var buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setBorder(BorderFactory.createEtchedBorder());
+
+        addButton(buttonPanel, BT_CF_TARGET, e -> fetchCfTarget(frame));
+        addButton(buttonPanel, BT_CF_APPS, e -> new CfAppSelector(this));
+        addButton(buttonPanel, BT_LOG_ALL, e -> logAllApplications());
+        addSeparator(buttonPanel);
+        addButton(buttonPanel, BT_CLEAR, e -> textArea.clear());
+        addToggleScrollButton(buttonPanel);
+        addSeparator(buttonPanel);
+        addFilterComponents(buttonPanel);
+        addSeparator(buttonPanel);
+        addButton(buttonPanel, BT_SAVE, e -> saveLog());
+
+        frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+    }
+
+    private void addButton(JPanel panel, String text, ActionListener actionListener) {
+        var button = new JButton(text);
+        button.addActionListener(actionListener);
+        panel.add(button);
+    }
+
+    private void addSeparator(JPanel panel) {
+        var separator = new JSeparator(SwingConstants.VERTICAL);
+        separator.setPreferredSize(new Dimension(2, 30));
+        panel.add(Box.createHorizontalStrut(4));
+        panel.add(separator);
+        panel.add(Box.createHorizontalStrut(4));
+    }
+
+    private void addToggleScrollButton(JPanel panel) {
+        toggleScrollButton = new JButton(BT_STOP_AUTO_SCROLL);
+        toggleScrollButton.addActionListener(e -> toggleScrolling());
+        panel.add(toggleScrollButton);
+    }
+
+    private void addFilterComponents(JPanel panel) {
+        toggleFilterButton = new JButton(BT_FILTER_ON);
+        filterValueTextField = new JTextField("", 20);
+
+        toggleFilterButton.addActionListener(e -> toggleFilter());
+        toggleFilterButton.setEnabled(false);
+
+        panel.add(toggleFilterButton);
+        panel.add(filterValueTextField);
+    }
+
+    private void fetchCfTarget(JFrame frame) {
+        new Thread(() -> {
+            var target = Cf.target(this::logger);
+            SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
+        }).start();
+    }
+
+    private void logAllApplications() {
+        new Thread(() -> Cf.logs(this::logger)).start();
+    }
+
+    private void toggleScrolling() {
+        if (textArea.isScrollingActive()) {
+            toggleScrollButton.setText(BT_START_AUTO_SCROLL);
+            textArea.stopScrolling();
+        } else {
+            toggleScrollButton.setText(BT_STOP_AUTO_SCROLL);
+            textArea.startScrolling();
+        }
+    }
+
+    private void toggleFilter() {
+        if (!textArea.isHighlightActive()) {
+            return;
+        }
+
+        if (textArea.isFilterActive()) {
+            toggleFilterButton.setText(BT_FILTER_ON);
+            textArea.stopFilter();
+        } else {
+            toggleFilterButton.setText(BT_FILTER_OFF);
+            textArea.startFilter();
+        }
+    }
+
+    private void saveLog() {
+        new Thread(this::save).start();
     }
 
     private void save() {
         try {
             var path = Files.write(
-                Paths.get(SAVE_FILEPATH),
-                textArea.getText().getBytes(),
-                StandardOpenOption.CREATE,
-                StandardOpenOption.TRUNCATE_EXISTING
-            );
+                    Paths.get(SAVE_FILEPATH),
+                    textArea.getText().getBytes(),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
             var desktop = Desktop.getDesktop();
             desktop.edit(path.toFile());
             path.toFile().deleteOnExit();
