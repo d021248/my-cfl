@@ -92,15 +92,15 @@ public class Command implements Runnable {
         process = new ProcessBuilder().command(cmd).start();
 
         if (stdoutHandler != null) {
-            Thread.ofVirtual().start(() -> stdoutHandler.accept(process.getInputStream()));
+            Thread.ofPlatform().start(() -> stdoutHandler.accept(process.getInputStream()));
         }
 
         if (stderrHandler != null) {
-            Thread.ofVirtual().start(() -> stderrHandler.accept(process.getErrorStream()));
+            Thread.ofPlatform().start(() -> stderrHandler.accept(process.getErrorStream()));
         }
 
         if (stdinHandler != null) {
-            Thread.ofVirtual().start(() -> stdinHandler.accept(process.getOutputStream()));
+            Thread.ofPlatform().start(() -> stdinHandler.accept(process.getOutputStream()));
         }
 
         var result = process.waitFor();

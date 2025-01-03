@@ -40,21 +40,12 @@ public class Shell extends Command {
 
     @Override
     public void run() {
-
-        this.stdinHandler(os -> this.pipe(this.stdinSupplier, os));
-        this.stdoutHandler(is -> this.pipe(is, this.stdoutConsumer));
-        this.stderrHandler(is -> this.pipe(is, this.stderrConsumer));
+        this.stdinHandler(os -> pipe(this.stdinSupplier, os));
+        this.stdoutHandler(is -> pipe(is, this.stdoutConsumer));
+        this.stderrHandler(is -> pipe(is, this.stderrConsumer));
 
         this.stdoutConsumer.accept(this.cmd());
         super.run();
-    }
-
-    private void pipe(InputStream is, Consumer<String> consumer) {
-        try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
-            bufferedReader.lines().forEach(consumer::accept);
-        } catch (Exception e) {
-            handleException(e);
-        }
     }
 
     private void pipe(Supplier<InputStream> supplier, OutputStream os) {
@@ -74,6 +65,14 @@ public class Shell extends Command {
             }
         }
         os.flush();
+    }
+
+    private void pipe(InputStream is, Consumer<String> consumer) {
+        try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
+            bufferedReader.lines().forEach(consumer::accept);
+        } catch (IOException e) {
+            handleException(e);
+        }
     }
 
     private void handleException(Exception e) {

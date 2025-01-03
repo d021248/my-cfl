@@ -132,7 +132,7 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         addButton(buttonPanel, BT_CF_TARGET, e -> fetchCfTarget(frame));
-        addButton(buttonPanel, BT_CF_APPS, e -> new CfAppSelector(this));
+        addButton(buttonPanel, BT_CF_APPS, e -> Thread.ofVirtual().start(() -> new CfAppSelector(this)));
         addButton(buttonPanel, BT_LOG_ALL, e -> logAllApplications());
         addSeparator(buttonPanel);
         addButton(buttonPanel, BT_CLEAR, e -> textArea.clear());

@@ -22,7 +22,8 @@ public class Cf {
         for (int i = 0; i < command.length; i++) {
             cmd[i + 2] = command[i];
         }
-        new Thread(Shell.cmd(cmd).stdoutConsumer(logger)).start();
+        Shell.cmd(cmd).stdoutConsumer(logger).run();
+        // Thread.ofVirtual().start(Shell.cmd(cmd).stdoutConsumer(logger));
     }
 
     public static Target target(Consumer<String> logger) {
@@ -40,9 +41,11 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
-        Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).run();
+        // Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).run();
+        Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
         return lines
                 .stream()
+                .sorted()
                 .filter(App::matches)
                 .map(App::from)
                 .toList();
@@ -66,15 +69,15 @@ public class Cf {
     }
 
     public static void logs(Consumer<String> logger) {
-        Cf.apps(logger).stream().forEach(app -> Cf.logs(app.name(), logger));
+        Cf.apps(logger).stream().forEach(app -> Thread.ofVirtual().start(() -> Cf.logs(app.name(), logger)));
     }
 
     public static void logs(String appName, Consumer<String> logger) {
         Cf.stopLogs(appName);
-        var logAppCommand = Shell
-                .cmd("cf", "logs", appName)
-                .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)));
-        new Thread(logAppCommand).start();
+        Shell.cmd("cf", "logs", appName)
+                .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)))
+                .run();
+
     }
 
     public static void stopLogs(String appname) {
