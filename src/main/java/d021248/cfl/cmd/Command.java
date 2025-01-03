@@ -24,14 +24,13 @@ public class Command implements Runnable {
     protected Consumer<InputStream> stdoutHandler = null;
     protected Consumer<InputStream> stderrHandler = null;
 
-    protected Command(String... cmd) {
-        Objects.requireNonNull(cmd);
-        this.cmd = cmd;
-        this.commandString = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
-    }
-
     public static Command cmd(String... cmd) {
         return new Command(cmd);
+    }
+
+    protected Command(String... cmd) {
+        this.cmd = Objects.requireNonNull(cmd);
+        this.commandString = Arrays.asList(cmd).stream().collect(Collectors.joining(" "));
     }
 
     public Command stdinHandler(Consumer<OutputStream> stdinHandler) {

@@ -1,6 +1,7 @@
 package d021248.cfl.cmd;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -23,20 +24,17 @@ public class Shell extends Command {
     }
 
     public Shell stdinSupplier(Supplier<InputStream> stdinSupplier) {
-        Objects.requireNonNull(stdinSupplier);
-        this.stdinSupplier = stdinSupplier;
+        this.stdinSupplier = Objects.requireNonNull(stdinSupplier);
         return this;
     }
 
     public Shell stdoutConsumer(Consumer<String> stdoutConsumer) {
-        Objects.requireNonNull(stdoutConsumer);
-        this.stdoutConsumer = stdoutConsumer;
+        this.stdoutConsumer = Objects.requireNonNull(stdoutConsumer);
         return this;
     }
 
     public Shell stderrConsumer(Consumer<String> stderrConsumer) {
-        Objects.requireNonNull(stderrConsumer);
-        this.stderrConsumer = stderrConsumer;
+        this.stderrConsumer = Objects.requireNonNull(stderrConsumer);
         return this;
     }
 
@@ -55,25 +53,33 @@ public class Shell extends Command {
         try (var bufferedReader = new BufferedReader(new InputStreamReader(is))) {
             bufferedReader.lines().forEach(consumer::accept);
         } catch (Exception e) {
-            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
-            throw new RuntimeException(e);
+            handleException(e);
         }
     }
 
     private void pipe(Supplier<InputStream> supplier, OutputStream os) {
-        int c;
-        try {
-            var is = supplier.get();
-            while ((c = is.read()) > -1) {
-                os.write(c);
-                if (c == '\n') {
-                    os.flush();
-                }
-            }
-            os.flush();
+        try (var is = supplier.get()) {
+            transferData(is, os);
         } catch (Exception e) {
-            this.stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
-            throw new RuntimeException(e);
+            handleException(e);
         }
+    }
+
+    private void transferData(InputStream is, OutputStream os) throws IOException {
+        int c;
+        while ((c = is.read()) > -1) {
+            os.write(c);
+            if (c == '\n') {
+                os.flush();
+            }
+        }
+        os.flush();
+    }
+
+    private void handleException(Exception e) {
+        if (stderrConsumer != null) {
+            stderrConsumer.accept(String.format("Error: %s", e.getMessage()));
+        }
+        throw new RuntimeException(e);
     }
 }
