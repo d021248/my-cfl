@@ -69,6 +69,7 @@ public class Command implements Runnable {
         activeList.remove(this);
     }
 
+    @Override
     public void run() {
         System.err.println("starting: " + this);
 
