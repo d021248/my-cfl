@@ -58,7 +58,7 @@ public class CfLoggerUI implements Runnable {
 
     public static CfLoggerUI startNewInstance() {
         var cfLoggerUI = new CfLoggerUI();
-        new Thread(cfLoggerUI).start();
+        Thread.ofPlatform().start(cfLoggerUI);
         return cfLoggerUI;
     }
 
@@ -177,14 +177,14 @@ public class CfLoggerUI implements Runnable {
     }
 
     private void fetchCfTarget(JFrame frame) {
-        new Thread(() -> {
+        Thread.ofVirtual().start(() -> {
             var target = Cf.target(this::logger);
             SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
-        }).start();
+        });
     }
 
     private void logAllApplications() {
-        new Thread(() -> Cf.logs(this::logger)).start();
+        Thread.ofVirtual().start(() -> Cf.logs(this::logger));
     }
 
     private void toggleScrolling() {
@@ -212,7 +212,7 @@ public class CfLoggerUI implements Runnable {
     }
 
     private void saveLog() {
-        new Thread(this::save).start();
+        Thread.ofVirtual().start(this::save);
     }
 
     private void save() {
