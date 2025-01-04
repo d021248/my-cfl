@@ -41,7 +41,10 @@ public class Cf {
 
     public static List<App> apps(Consumer<String> logger) {
         var lines = new ArrayList<String>();
+
+        // does not work: concurrency problem
         // Shell.cmd("cf", "apps").stdoutConsumer(logger.andThen(lines::add)).run();
+
         Shell.cmd("cf", "apps").stdoutConsumer(lines::add).run();
         return lines
                 .stream()
@@ -69,14 +72,17 @@ public class Cf {
     }
 
     public static void logs(Consumer<String> logger) {
-        Cf.apps(logger).stream().forEach(app -> Thread.ofVirtual().start(() -> Cf.logs(app.name(), logger)));
+        Cf.apps(logger).forEach(app -> Cf.logs(app.name(), logger));
     }
 
     public static void logs(String appName, Consumer<String> logger) {
-        Cf.stopLogs(appName);
-        Shell.cmd("cf", "logs", appName)
-                .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)))
-                .run();
+        logger.accept(appName);
+        Thread.ofVirtual().start(() -> {
+            Cf.stopLogs(appName);
+            Shell.cmd("cf", "logs", appName)
+                    .stdoutConsumer(line -> logger.accept(line.isEmpty() ? "" : String.format("%s %s", appName, line)))
+                    .run();
+        });
 
     }
 

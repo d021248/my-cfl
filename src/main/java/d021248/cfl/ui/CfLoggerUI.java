@@ -132,8 +132,10 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         addButton(buttonPanel, BT_CF_TARGET, e -> fetchCfTarget(frame));
-        addButton(buttonPanel, BT_CF_APPS, e -> Thread.ofVirtual().start(() -> new CfAppSelector(this)));
-        addButton(buttonPanel, BT_LOG_ALL, e -> logAllApplications());
+        // addButton(buttonPanel, BT_CF_APPS, e -> Thread.ofVirtual().start(() -> new
+        // CfAppSelector(this)));
+        addButton(buttonPanel, BT_CF_APPS, e -> new CfAppSelector(this));
+        addButton(buttonPanel, BT_LOG_ALL, e -> Cf.logs(this::logger));
         addSeparator(buttonPanel);
         addButton(buttonPanel, BT_CLEAR, e -> textArea.clear());
         addToggleScrollButton(buttonPanel);
@@ -177,14 +179,8 @@ public class CfLoggerUI implements Runnable {
     }
 
     private void fetchCfTarget(JFrame frame) {
-        Thread.ofVirtual().start(() -> {
-            var target = Cf.target(this::logger);
-            SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
-        });
-    }
-
-    private void logAllApplications() {
-        Thread.ofVirtual().start(() -> Cf.logs(this::logger));
+        var target = Cf.target(this::logger);
+        SwingUtilities.invokeLater(() -> frame.setTitle(TITLE.replace("cfLogger", target.space())));
     }
 
     private void toggleScrolling() {

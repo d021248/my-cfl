@@ -1,7 +1,5 @@
 package d021248.cfl.ui;
 
-import d021248.cfl.cmd.Shell;
-
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
@@ -10,8 +8,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.function.BiFunction;
+
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Utilities;
+
+import d021248.cfl.cmd.Shell;
 
 class KeyAndMouseAdapter {
 
@@ -43,8 +44,7 @@ class KeyAndMouseAdapter {
 
         this.loggerUI.toggleFilterButton.setEnabled(!this.loggerUI.filterValueTextField.getText().isEmpty());
         this.loggerUI.toggleFilterButton.setText(
-                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF
-            );
+                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF);
 
         // copy to clipboard
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);
@@ -208,10 +208,9 @@ class KeyAndMouseAdapter {
         @Override
         public void keyTyped(KeyEvent keyEvent) {
             var filterValue = String.format(
-                "%s%s",
-                loggerUI.filterValueTextField.getText(),
-                toPrintableChar(keyEvent.getKeyChar())
-            );
+                    "%s%s",
+                    loggerUI.filterValueTextField.getText(),
+                    toPrintableChar(keyEvent.getKeyChar()));
             if (!filterValue.startsWith(">")) {
                 KeyAndMouseAdapter.this.applyHighlight.apply(filterValue, false);
             }
@@ -220,14 +219,13 @@ class KeyAndMouseAdapter {
         @Override
         public void keyPressed(KeyEvent keyEvent) {
             var filterValue = String.format(
-                "%s%s",
-                loggerUI.filterValueTextField.getText(),
-                toPrintableChar(keyEvent.getKeyChar())
-            );
+                    "%s%s",
+                    loggerUI.filterValueTextField.getText(),
+                    toPrintableChar(keyEvent.getKeyChar()));
             if (filterValue.startsWith(">")) {
                 if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
                     var command = String.format("CMD /C %s", filterValue.substring(1).trim());
-                    new Thread(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger)).start();
+                    Thread.ofVirtual().start(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger));
                     KeyAndMouseAdapter.this.applyHighlight.apply("", false);
                     loggerUI.filterValueTextField.setText("");
                 }
@@ -240,12 +238,10 @@ class KeyAndMouseAdapter {
 
         public boolean isPrintableChar(char c) {
             var block = Character.UnicodeBlock.of(c);
-            return (
-                (!Character.isISOControl(c)) &&
-                c != KeyEvent.CHAR_UNDEFINED &&
-                block != null &&
-                block != Character.UnicodeBlock.SPECIALS
-            );
+            return ((!Character.isISOControl(c)) &&
+                    c != KeyEvent.CHAR_UNDEFINED &&
+                    block != null &&
+                    block != Character.UnicodeBlock.SPECIALS);
         }
     };
 }
