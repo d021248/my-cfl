@@ -18,16 +18,21 @@ class KeyAndMouseAdapter {
 
     private CfLoggerUI loggerUI;
     private CfTextArea textArea;
+    private boolean isControlKeyDown = false;
+    private boolean isAltKeyDown = false;
 
     public KeyAndMouseAdapter(CfLoggerUI loggerUI) {
         this.loggerUI = loggerUI;
-        this.loggerUI.filterValueTextField.addKeyListener(cfLoggerUIKeyAdapter);
-        this.loggerUI.textAreaScrollPane.addMouseWheelListener(textAreaMouseAdapter);
-
         this.textArea = loggerUI.textArea;
-        this.textArea.addKeyListener(textAreaKeyAdapter);
-        this.textArea.addMouseMotionListener(textAreaMouseAdapter);
-        this.textArea.addMouseListener(textAreaMouseAdapter);
+        initializeListeners();
+    }
+
+    private void initializeListeners() {
+        loggerUI.filterValueTextField.addKeyListener(cfLoggerUIKeyAdapter);
+        loggerUI.textAreaScrollPane.addMouseWheelListener(textAreaMouseAdapter);
+        textArea.addKeyListener(textAreaKeyAdapter);
+        textArea.addMouseMotionListener(textAreaMouseAdapter);
+        textArea.addMouseListener(textAreaMouseAdapter);
     }
 
     private BiFunction<String, Boolean, String> applyHighlight = (filterValue, isUpdateTextFieldRequested) -> {
@@ -39,20 +44,27 @@ class KeyAndMouseAdapter {
         }
 
         if (Boolean.TRUE.equals(isUpdateTextFieldRequested)) {
-            loggerUI.filterValueTextField.setText(filterValue);
+            updateTextField(filterValue);
         }
 
-        this.loggerUI.toggleFilterButton.setEnabled(!this.loggerUI.filterValueTextField.getText().isEmpty());
-        this.loggerUI.toggleFilterButton.setText(
-                this.loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF);
-
-        // copy to clipboard
-        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(filterValue), null);
+        toggleFilterButton();
+        copyToClipboard(filterValue);
         return filterValue;
     };
 
-    private boolean isControlKeyDown = false;
-    private boolean isAltKeyDown = false;
+    private void updateTextField(String filterValue) {
+        loggerUI.filterValueTextField.setText(filterValue);
+    }
+
+    private void toggleFilterButton() {
+        loggerUI.toggleFilterButton.setEnabled(!loggerUI.filterValueTextField.getText().isEmpty());
+        loggerUI.toggleFilterButton.setText(
+                loggerUI.toggleFilterButton.isEnabled() ? CfLoggerUI.BT_FILTER_ON : CfLoggerUI.BT_FILTER_OFF);
+    }
+
+    private void copyToClipboard(String text) {
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(text), null);
+    }
 
     private KeyAdapter textAreaKeyAdapter = new KeyAdapter() {
         @Override
@@ -63,8 +75,8 @@ class KeyAndMouseAdapter {
 
         @Override
         public void keyReleased(KeyEvent e) {
-            isAltKeyDown = e.isAltDown();
             isControlKeyDown = e.isControlDown();
+            isAltKeyDown = e.isAltDown();
         }
     };
 
@@ -76,9 +88,39 @@ class KeyAndMouseAdapter {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            pos = textArea.viewToModel2D(e.getPoint());
+            handleMouseDragged(e);
+        }
 
-            textArea.stopScrolling(); // TODO: update Button
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            if (isDraggedOn) {
+                isDraggedOn = false;
+            }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            handleMousePressed(e);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            super.mouseReleased(e);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            handleMouseClicked(e);
+        }
+
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            handleMouseWheelMoved(e);
+        }
+
+        private void handleMouseDragged(MouseEvent e) {
+            pos = textArea.viewToModel2D(e.getPoint());
+            textArea.stopScrolling();
 
             if (textArea.isFilterActive()) {
                 return;
@@ -92,89 +134,41 @@ class KeyAndMouseAdapter {
                 end = pos;
             }
 
-            textArea.setSelectionStart(start < end ? start : end);
-            textArea.setSelectionEnd(start < end ? end : start);
+            textArea.setSelectionStart(Math.min(start, end));
+            textArea.setSelectionEnd(Math.max(start, end));
             textArea.setHighlightText(textArea.getSelectedText());
             applyHighlight.apply(textArea.getHighlightText(), true);
         }
 
-        @Override
-        public void mouseMoved(MouseEvent e) {
-            if (isDraggedOn) {
-                isDraggedOn = false;
-            }
-        }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
+        private void handleMousePressed(MouseEvent e) {
             textArea.removeHighlight();
             loggerUI.toggleScrollButton.setText("start auto-scroll");
             textArea.stopScrolling();
             super.mousePressed(e);
         }
 
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            super.mouseReleased(e);
-        }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
+        private void handleMouseClicked(MouseEvent e) {
             pos = textArea.viewToModel2D(e.getPoint());
-            textArea.stopScrolling(); // TODO: update Button
+            textArea.stopScrolling();
             applyHighlight.apply("", true);
 
-            if (e.getButton() != MouseEvent.BUTTON1) {
+            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 2 || e.isConsumed()) {
                 return;
             }
 
-            if (e.getClickCount() != 2) {
-                return;
-            }
-            if (e.isConsumed()) {
-                return;
-            }
+            findAndToggleSelectedWord(e);
+        }
 
-            // ------------------------------------------------------------------
-            // find the selected word
-            // ------------------------------------------------------------------
+        private void findAndToggleSelectedWord(MouseEvent e) {
             var cursorPos = textArea.viewToModel2D(e.getPoint());
             try {
-                // ------------------------------------------------------------------
-                // 1. find the selected line
-                // ------------------------------------------------------------------
                 var rowStartPos = Utilities.getRowStart(textArea, cursorPos);
                 var rowEndPos = Utilities.getRowEnd(textArea, cursorPos);
-
                 var rowCursorPos = cursorPos - rowStartPos;
-
                 var selectedLine = textArea.getText().substring(rowStartPos, rowEndPos);
 
-                // ------------------------------------------------------------------
-                // 2. find the selected word
-                // ------------------------------------------------------------------
-                String selectedWord = null;
+                var selectedWord = findSelectedWord(selectedLine, rowCursorPos);
 
-                var selectedWordStartPos = rowCursorPos;
-                while (selectedWordStartPos > 0 && !Character.isWhitespace(selectedLine.charAt(selectedWordStartPos))) {
-                    selectedWordStartPos--;
-                }
-
-                var selectedWordEndPos = rowCursorPos;
-                while (!Character.isWhitespace(selectedLine.charAt(selectedWordEndPos))) {
-                    selectedWordEndPos++;
-                }
-
-                // ------------------------------------------------------------------
-                // 3. cut out the selected word
-                // ------------------------------------------------------------------
-                if (selectedWordEndPos >= selectedWordStartPos) {
-                    selectedWord = selectedLine.substring(selectedWordStartPos, selectedWordEndPos).trim();
-                }
-
-                // ------------------------------------------------------------------
-                // 4. toggle filter on/off
-                // ------------------------------------------------------------------
                 if (textArea.isHighlightActive()) {
                     textArea.stopFilter();
                     applyHighlight.apply("", true);
@@ -186,8 +180,22 @@ class KeyAndMouseAdapter {
             }
         }
 
-        @Override
-        public void mouseWheelMoved(MouseWheelEvent e) {
+        private String findSelectedWord(String selectedLine, int rowCursorPos) {
+            int selectedWordStartPos = rowCursorPos;
+            while (selectedWordStartPos > 0 && !Character.isWhitespace(selectedLine.charAt(selectedWordStartPos))) {
+                selectedWordStartPos--;
+            }
+
+            int selectedWordEndPos = rowCursorPos;
+            while (selectedWordEndPos < selectedLine.length()
+                    && !Character.isWhitespace(selectedLine.charAt(selectedWordEndPos))) {
+                selectedWordEndPos++;
+            }
+
+            return selectedLine.substring(selectedWordStartPos, selectedWordEndPos).trim();
+        }
+
+        private void handleMouseWheelMoved(MouseWheelEvent e) {
             if (isControlKeyDown) {
                 if (e.getWheelRotation() < 0) {
                     textArea.decreaseFontSize();
@@ -207,41 +215,41 @@ class KeyAndMouseAdapter {
     private KeyAdapter cfLoggerUIKeyAdapter = new KeyAdapter() {
         @Override
         public void keyTyped(KeyEvent keyEvent) {
-            var filterValue = String.format(
-                    "%s%s",
-                    loggerUI.filterValueTextField.getText(),
-                    toPrintableChar(keyEvent.getKeyChar()));
-            if (!filterValue.startsWith(">")) {
-                KeyAndMouseAdapter.this.applyHighlight.apply(filterValue, false);
-            }
+            handleKeyTyped(keyEvent);
         }
 
         @Override
         public void keyPressed(KeyEvent keyEvent) {
-            var filterValue = String.format(
-                    "%s%s",
-                    loggerUI.filterValueTextField.getText(),
+            handleKeyPressed(keyEvent);
+        }
+
+        private void handleKeyTyped(KeyEvent keyEvent) {
+            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
                     toPrintableChar(keyEvent.getKeyChar()));
-            if (filterValue.startsWith(">")) {
-                if (keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
-                    var command = String.format("CMD /C %s", filterValue.substring(1).trim());
-                    Thread.ofVirtual().start(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger));
-                    KeyAndMouseAdapter.this.applyHighlight.apply("", false);
-                    loggerUI.filterValueTextField.setText("");
-                }
+            if (!filterValue.startsWith(">")) {
+                applyHighlight.apply(filterValue, false);
             }
         }
 
-        public String toPrintableChar(char c) {
+        private void handleKeyPressed(KeyEvent keyEvent) {
+            var filterValue = String.format("%s%s", loggerUI.filterValueTextField.getText(),
+                    toPrintableChar(keyEvent.getKeyChar()));
+            if (filterValue.startsWith(">") && keyEvent.getKeyCode() == KeyEvent.VK_ENTER) {
+                var command = String.format("CMD /C %s", filterValue.substring(1).trim());
+                Thread.ofVirtual().start(Shell.cmd(command.split(" ")).stdoutConsumer(loggerUI::logger));
+                applyHighlight.apply("", false);
+                loggerUI.filterValueTextField.setText("");
+            }
+        }
+
+        private String toPrintableChar(char c) {
             return isPrintableChar(c) ? String.valueOf(c) : "";
         }
 
-        public boolean isPrintableChar(char c) {
+        private boolean isPrintableChar(char c) {
             var block = Character.UnicodeBlock.of(c);
-            return ((!Character.isISOControl(c)) &&
-                    c != KeyEvent.CHAR_UNDEFINED &&
-                    block != null &&
-                    block != Character.UnicodeBlock.SPECIALS);
+            return ((!Character.isISOControl(c)) && c != KeyEvent.CHAR_UNDEFINED && block != null
+                    && block != Character.UnicodeBlock.SPECIALS);
         }
     };
 }
