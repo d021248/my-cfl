@@ -77,6 +77,7 @@ public class CfLoggerUI implements Runnable {
         addButtons(frame);
         keyAndMouseAdapter = new KeyAndMouseAdapter(this);
         frame.setVisible(true);
+        fetchCfTarget(frame);
     }
 
     private void setLookAndFeel() {
