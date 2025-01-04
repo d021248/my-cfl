@@ -76,7 +76,7 @@ public class Cf {
     }
 
     public static void logs(String appName, Consumer<String> logger) {
-        logger.accept(appName);
+        // logger.accept(appName);
         Thread.ofVirtual().start(() -> {
             Cf.stopLogs(appName);
             Shell.cmd("cf", "logs", appName)
