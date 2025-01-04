@@ -132,8 +132,6 @@ public class CfLoggerUI implements Runnable {
         buttonPanel.setBorder(BorderFactory.createEtchedBorder());
 
         addButton(buttonPanel, BT_CF_TARGET, e -> fetchCfTarget(frame));
-        // addButton(buttonPanel, BT_CF_APPS, e -> Thread.ofVirtual().start(() -> new
-        // CfAppSelector(this)));
         addButton(buttonPanel, BT_CF_APPS, e -> new CfAppSelector(this));
         addButton(buttonPanel, BT_LOG_ALL, e -> Cf.logs(this::logger));
         addSeparator(buttonPanel);
@@ -142,7 +140,7 @@ public class CfLoggerUI implements Runnable {
         addSeparator(buttonPanel);
         addFilterComponents(buttonPanel);
         addSeparator(buttonPanel);
-        addButton(buttonPanel, BT_SAVE, e -> saveLog());
+        addButton(buttonPanel, BT_SAVE, e -> Thread.ofVirtual().start(this::save));
 
         frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -205,10 +203,6 @@ public class CfLoggerUI implements Runnable {
             toggleFilterButton.setText(BT_FILTER_OFF);
             textArea.startFilter();
         }
-    }
-
-    private void saveLog() {
-        Thread.ofVirtual().start(this::save);
     }
 
     private void save() {
